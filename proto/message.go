@@ -20,9 +20,10 @@ func (m *CommonMessage) MarshalJSON() []byte {
 }
 
 type DeviceInfo struct {
-	Serial string `json:"serial"` // ro.serialno
-	Brand  string `json:"brand"`  // ro.product.brand
-	Model  string `json:"model"`  // ro.product.model
-	HWAddr string `json:"hwaddr"` // persist.sys.wifi.mac
-	IP     string `json:"ip,omitempty"`
+	Serial       string `json:"serial"` // ro.serialno
+	Brand        string `json:"brand"`  // ro.product.brand
+	Model        string `json:"model"`  // ro.product.model
+	HWAddr       string `json:"hwaddr"` // persist.sys.wifi.mac
+	IP           string `json:"ip,omitempty"`
+	AgentVersion string `json:"agentVersion"`
 }

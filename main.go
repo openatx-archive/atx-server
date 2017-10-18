@@ -83,7 +83,7 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	for {
 		mt, message, err := c.ReadMessage()
 		if err != nil {
-			log.Println("read:", err)
+			log.Println(host, "websocket connection closed")
 			break
 		}
 		if mt == websocket.TextMessage {
@@ -158,6 +158,15 @@ func main() {
 			// fmt.Printf("%s: %s %s %s\n", host, info.Serial, info.Brand, info.Model)
 		}
 		template.Must(template.ParseFiles("index.html")).Execute(w, devices)
+	})
+	http.HandleFunc("/list", func(w http.ResponseWriter, r *http.Request) {
+		devices := make([]*proto.DeviceInfo, 0)
+		for _, info := range hostsManager.maps {
+			devices = append(devices, info)
+			// fmt.Printf("%s: %s %s %s\n", host, info.Serial, info.Brand, info.Model)
+		}
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		json.NewEncoder(w).Encode(devices)
 	})
 	log.Fatal(http.ListenAndServe(*addr, nil))
 }
