@@ -159,6 +159,10 @@ func main() {
 		}
 		template.Must(template.ParseFiles("index.html")).Execute(w, devices)
 	})
+	http.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "favicon.ico")
+	})
+
 	http.HandleFunc("/list", func(w http.ResponseWriter, r *http.Request) {
 		devices := make([]*proto.DeviceInfo, 0)
 		for _, info := range hostsManager.maps {
