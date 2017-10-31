@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/url"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/openatx/atx-server/proto"
@@ -21,6 +22,15 @@ var (
 	upgrader     = websocket.Upgrader{}
 	addr         = flag.String("addr", ":8080", "http service address")
 	hostsManager = NewHostsManager()
+
+	// Time allowed to write message to the client
+	wsWriteWait = 10 * time.Second
+
+	// Send pings to client with this period. Must be less than pongWait.
+	wsPingPeriod = 10 * time.Second
+
+	// Time allowed to read the next pong message from client
+	wsPongWait = wsPingPeriod * 3
 )
 
 type HostsManager struct {
@@ -81,29 +91,45 @@ func handleWebsocketMessage(host string, message []byte) {
 
 func echo(w http.ResponseWriter, r *http.Request) {
 	host, _, _ := net.SplitHostPort(r.RemoteAddr)
-	c, err := upgrader.Upgrade(w, r, nil)
+	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Print("upgrade:", err)
 		return
 	}
+	defer ws.Close()
+
 	log.Printf("new connection: %s", host)
 	hostsManager.Add(host)
 
-	defer c.Close()
+	ws.SetReadDeadline(time.Now().Add(wsPongWait))
+	ws.SetPongHandler(func(string) error {
+		ws.SetReadDeadline(time.Now().Add(wsPongWait))
+		return nil
+	})
+
+	// ping ticker
+	go func() {
+		pingTicker := time.NewTicker(wsPingPeriod)
+		defer pingTicker.Stop()
+		for {
+			select {
+			case <-pingTicker.C:
+				ws.SetWriteDeadline(time.Now().Add(wsWriteWait))
+				if err := ws.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
+					return
+				}
+			}
+		}
+	}()
+
 	for {
-		mt, message, err := c.ReadMessage()
+		mt, message, err := ws.ReadMessage()
 		if err != nil {
 			log.Println(host, "websocket connection closed")
 			break
 		}
 		if mt == websocket.TextMessage {
 			handleWebsocketMessage(host, message)
-		}
-		// log.Printf("recv: %s", message)
-		err = c.WriteMessage(mt, message)
-		if err != nil {
-			log.Println("write:", err)
-			break
 		}
 	}
 	log.Printf("off connection: %s", host)
