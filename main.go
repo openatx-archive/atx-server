@@ -43,15 +43,25 @@ func (t *HostsManager) Get(host string) *proto.DeviceInfo {
 func (t *HostsManager) Add(host string) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
-	t.maps[host] = &proto.DeviceInfo{
-		IP: host,
+	if info, ok := t.maps[host]; ok {
+		info.IP = host
+	} else {
+		t.maps[host] = &proto.DeviceInfo{
+			IP:              host,
+			ConnectionCount: 1,
+		}
 	}
 }
 
 func (t *HostsManager) Remove(host string) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
-	delete(t.maps, host)
+	if info, ok := t.maps["host"]; ok {
+		info.ConnectionCount--
+		if info.ConnectionCount <= 0 {
+			delete(t.maps, host)
+		}
+	}
 }
 
 func handleWebsocketMessage(host string, message []byte) {
@@ -76,7 +86,7 @@ func echo(w http.ResponseWriter, r *http.Request) {
 		log.Print("upgrade:", err)
 		return
 	}
-	log.Printf("come online: %s", host)
+	log.Printf("new connection: %s", host)
 	hostsManager.Add(host)
 
 	defer c.Close()
@@ -96,7 +106,7 @@ func echo(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 	}
-	log.Printf("went offline: %s", host)
+	log.Printf("off connection: %s", host)
 	hostsManager.Remove(host)
 }
 
