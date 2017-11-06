@@ -63,13 +63,25 @@ func (t *HostsManager) Add(host string) {
 	}
 }
 
-func (t *HostsManager) Remove(host string) {
+func (t *HostsManager) AddFromDeviceInfo(devInfo *proto.DeviceInfo) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
-	if info, ok := t.maps["host"]; ok {
+	udid := devInfo.Udid
+	if info, ok := t.maps[udid]; ok {
+		info.IP = devInfo.IP
+	} else {
+		devInfo.ConnectionCount = 1
+		t.maps[udid] = devInfo
+	}
+}
+
+func (t *HostsManager) Remove(udid string) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	if info, ok := t.maps[udid]; ok {
 		info.ConnectionCount--
 		if info.ConnectionCount <= 0 {
-			delete(t.maps, host)
+			delete(t.maps, udid)
 		}
 	}
 }
@@ -96,16 +108,44 @@ func echo(w http.ResponseWriter, r *http.Request) {
 		log.Print("upgrade:", err)
 		return
 	}
-	defer ws.Close()
-
 	log.Printf("new connection: %s", host)
-	hostsManager.Add(host)
+
+	defer func() {
+		log.Printf("connection lost: %s", host)
+		ws.Close()
+	}()
+
+	// hostsManager.Add(host)
 
 	ws.SetReadDeadline(time.Now().Add(wsPongWait))
 	ws.SetPongHandler(func(string) error {
 		ws.SetReadDeadline(time.Now().Add(wsPongWait))
 		return nil
 	})
+
+	// Read device info
+	message := &proto.CommonMessage{}
+	if err := ws.ReadJSON(message); err != nil {
+		log.Println("error: read json message")
+		return
+	}
+	if message.Type != proto.DeviceInfoMessage {
+		log.Printf("error: first message must be device info, but got %v", message.Type)
+		return
+	}
+	devInfo := new(proto.DeviceInfo)
+	jsonData, _ := json.Marshal(message.Data)
+	json.NewDecoder(bytes.NewReader(jsonData)).Decode(devInfo)
+	if devInfo.Udid == "" {
+		log.Printf("error: udid is empty")
+		return
+	}
+	devInfo.IP = host
+	hostsManager.AddFromDeviceInfo(devInfo)
+	defer func(udid string) {
+		log.Printf("remove host: %s", host)
+		hostsManager.Remove(udid)
+	}(devInfo.Udid)
 
 	// ping ticker
 	go func() {
@@ -116,12 +156,14 @@ func echo(w http.ResponseWriter, r *http.Request) {
 			case <-pingTicker.C:
 				ws.SetWriteDeadline(time.Now().Add(wsWriteWait))
 				if err := ws.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
+					log.Printf("%s send ping error: %v", host, err)
 					return
 				}
 			}
 		}
 	}()
 
+	// Listen device info update
 	for {
 		mt, message, err := ws.ReadMessage()
 		if err != nil {
@@ -132,8 +174,6 @@ func echo(w http.ResponseWriter, r *http.Request) {
 			handleWebsocketMessage(host, message)
 		}
 	}
-	log.Printf("off connection: %s", host)
-	hostsManager.Remove(host)
 }
 
 func unlockAll() {
@@ -151,7 +191,7 @@ func main() {
 	batchRunCommand := func(command string) {
 		wg := sync.WaitGroup{}
 		failCount := 0
-		for host := range hostsManager.maps {
+		for _, devInfo := range hostsManager.maps {
 			wg.Add(1)
 			go func(host string) {
 				u := &url.URL{}
@@ -170,12 +210,12 @@ func main() {
 					resp.Body.Close()
 				}
 				wg.Done()
-			}(host)
+			}(devInfo.IP)
 		}
 		wg.Wait()
 	}
 	http.HandleFunc("/api/v1/batch/unlock", func(w http.ResponseWriter, r *http.Request) {
-		batchRunCommand("am start --user 0 -a com.github.uiautomator.ACTION_IDENTIFY; input keyevent HOME")
+		batchRunCommand("am start -W --user 0 -a com.github.uiautomator.ACTION_IDENTIFY; input keyevent HOME")
 		io.WriteString(w, "Success")
 	})
 	http.HandleFunc("/api/v1/batch/lock", func(w http.ResponseWriter, r *http.Request) {

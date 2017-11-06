@@ -20,6 +20,7 @@ func (m *CommonMessage) MarshalJSON() []byte {
 }
 
 type DeviceInfo struct {
+	Udid            string `json:"udid"`   // Unique device identifier
 	Serial          string `json:"serial"` // ro.serialno
 	Brand           string `json:"brand"`  // ro.product.brand
 	Model           string `json:"model"`  // ro.product.model
