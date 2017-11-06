@@ -18,6 +18,11 @@ import (
 	"github.com/openatx/atx-server/proto"
 )
 
+const (
+	version         = "dev"
+	atxAgentVersion = "0.0.8"
+)
+
 var (
 	upgrader     = websocket.Upgrader{}
 	addr         = flag.String("addr", ":8080", "http service address")
@@ -185,6 +190,14 @@ func unlockAll() {
 func main() {
 	flag.Parse()
 	log.SetFlags(log.Lshortfile | log.LstdFlags)
+
+	http.HandleFunc("/version", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		json.NewEncoder(w).Encode(map[string]string{
+			"server":    version,
+			"atx-agent": atxAgentVersion,
+		})
+	})
 
 	http.HandleFunc("/echo", echo)
 

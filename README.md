@@ -29,5 +29,16 @@ $ curl http://localhost:8080/list
 ]
 ```
 
+## /version
+`atx-agent`通过检测该接口确定是否升级
+
+```bash
+$ curl /version
+{
+    "server": "dev",
+    "atx-agent": "0.0.7"
+}
+```
+
 # LICENSE
 [MIT](LICENSE)
