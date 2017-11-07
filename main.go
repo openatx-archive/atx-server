@@ -148,7 +148,6 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	devInfo.IP = host
 	hostsManager.AddFromDeviceInfo(devInfo)
 	defer func(udid string) {
-		log.Printf("remove host: %s", host)
 		hostsManager.Remove(udid)
 	}(devInfo.Udid)
 
@@ -160,8 +159,8 @@ func echo(w http.ResponseWriter, r *http.Request) {
 			select {
 			case <-pingTicker.C:
 				ws.SetWriteDeadline(time.Now().Add(wsWriteWait))
+				// here, writeMessage is not thread safe
 				if err := ws.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
-					log.Printf("%s send ping error: %v", host, err)
 					return
 				}
 			}
