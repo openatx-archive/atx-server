@@ -74,6 +74,7 @@ func (t *HostsManager) AddFromDeviceInfo(devInfo *proto.DeviceInfo) {
 	udid := devInfo.Udid
 	if info, ok := t.maps[udid]; ok {
 		info.IP = devInfo.IP
+		info.ConnectionCount++
 	} else {
 		devInfo.ConnectionCount = 1
 		t.maps[udid] = devInfo
