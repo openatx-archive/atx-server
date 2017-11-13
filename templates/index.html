@@ -1,0 +1,147 @@
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap-theme.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js"></script>
+  <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.5.3/dist/vue.min.js"></script>
+  <style>
+    body {
+      font-family: "Segoe UI", Arial, "Microsoft Yahei", sans-serif;
+    }
+    
+    .color-green {
+      color: green;
+    }
+    
+    .fa-fix-height {
+      line-height: 24px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-md-4">
+        <h3>ATX 手机设备管理</h3>
+      </div>
+    </div>
+    <form class="form-inline">
+      <div class="form-group">
+        <button id="unlock-all" class="btn btn-sm btn-default"><i class="fa fa-unlock"></i> 全部解锁</button>
+        <button id="lock-all" class="btn btn-sm btn-default"><i class="fa fa-lock"></i> 全部锁屏</button>
+      </div>
+      <div class="form-group has-success has-feedback">
+        <!-- <label>Search</label> -->
+        <div class="input-group input-group-sm">
+          <!-- <div class="input-group-addon">Search</div> -->
+          <div class="input-group-addon"><i class="fa fa-search"></i></div>
+          <input type="text" class="form-control">
+        </div>
+      </div>
+    </form>
+    <div class="table-responsive">
+      <table class="table table-hover table-condensed">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>IP</th>
+            <th>Serial</th>
+            <th>Brand</th>
+            <th>Model</th>
+            <th class="hidden-xs">MAC</th>
+            <th>Agent</th>
+            <th>电量</th>
+            <th>Actions</th>
+            <!-- <th class="hidden-xs">Other</th> -->
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="d in devices">
+            <td>
+              <input type="checkbox">
+            </td>
+            <td><span v-text="d.ip"></span></td>
+            <td v-text='d.serial'></td>
+            <td v-text="d.brand"></td>
+            <td v-text="d.model"></td>
+            <td class="hidden-xs text-uppercase"><span v-text="d.hwaddr"></span></td>
+            <td v-text="d.agentVersion"></td>
+            <td>
+              <span class="color-green fa-fix-height fa fa-battery-full"></span>
+            </td>
+            <td>
+              <button @click="locate(d)" class="btn btn-sm btn-default"><i title="定位" class="fa fa-location-arrow"></i></button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <script>
+    $(function() {
+      $("#unlock-all").click(function() {
+        var $message = $("#message")
+        $message.text("解锁中 ...")
+        $.ajax({
+            url: "/api/v1/batch/unlock",
+            method: "post",
+          })
+          .then(function(ret) {
+            $message.text("解锁完成");
+            setTimeout(function() {
+              $message.text("");
+            }, 1000); //.delay(3000).text("");
+          })
+      })
+
+      $("#lock-all").click(function() {
+        var $message = $("#message")
+        $message.text("锁屏中 ...")
+        $.ajax({
+            url: "/api/v1/batch/lock",
+            method: "post",
+          })
+          .then(function(ret) {
+            $message.text("锁屏完成");
+            setTimeout(function() {
+              $message.text("");
+            }, 1000); //.delay(3000).text("");
+          })
+      })
+    })
+
+    new Vue({
+      el: ".container-fluid",
+      data: {
+        name: "He",
+        devices: []
+      },
+      mounted: function() {
+        $.ajax({
+          url: "/list",
+        }).then(function(ret) {
+          this.devices = ret;
+        }.bind(this))
+      },
+      methods: {
+        locate: function(d) {
+          $.ajax({
+            url: "/devices/" + d.udid + "/identify",
+            method: "post",
+          })
+        }
+      }
+    })
+  </script>
+</body>
+
+</html>

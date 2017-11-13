@@ -14,6 +14,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gorilla/mux"
+
 	"github.com/gorilla/websocket"
 	"github.com/openatx/atx-server/proto"
 )
@@ -37,60 +39,6 @@ var (
 	// Time allowed to read the next pong message from client
 	wsPongWait = wsPingPeriod * 3
 )
-
-type HostsManager struct {
-	maps map[string]*proto.DeviceInfo
-	mu   sync.RWMutex
-}
-
-func NewHostsManager() *HostsManager {
-	return &HostsManager{
-		maps: make(map[string]*proto.DeviceInfo),
-	}
-}
-
-func (t *HostsManager) Get(host string) *proto.DeviceInfo {
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	return t.maps[host]
-}
-
-func (t *HostsManager) Add(host string) {
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	if info, ok := t.maps[host]; ok {
-		info.IP = host
-	} else {
-		t.maps[host] = &proto.DeviceInfo{
-			IP:              host,
-			ConnectionCount: 1,
-		}
-	}
-}
-
-func (t *HostsManager) AddFromDeviceInfo(devInfo *proto.DeviceInfo) {
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	udid := devInfo.Udid
-	if info, ok := t.maps[udid]; ok {
-		info.IP = devInfo.IP
-		info.ConnectionCount++
-	} else {
-		devInfo.ConnectionCount = 1
-		t.maps[udid] = devInfo
-	}
-}
-
-func (t *HostsManager) Remove(udid string) {
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	if info, ok := t.maps[udid]; ok {
-		info.ConnectionCount--
-		if info.ConnectionCount <= 0 {
-			delete(t.maps, udid)
-		}
-	}
-}
 
 func handleWebsocketMessage(host string, message []byte) {
 	msg := &proto.CommonMessage{}
@@ -147,6 +95,7 @@ func echo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	devInfo.IP = host
+	log.Printf("client ip:%s product:%s brand:%s", devInfo.IP, devInfo.Model, devInfo.Brand)
 	hostsManager.AddFromDeviceInfo(devInfo)
 	defer func(udid string) {
 		hostsManager.Remove(udid)
@@ -187,11 +136,39 @@ func unlockAll() {
 	}
 }
 
+func runAndroidShell(ip string, command string) string {
+	u, _ := url.Parse("http://" + ip + ":7912/shell")
+	params := url.Values{}
+	params.Add("command", command)
+	u.RawQuery = params.Encode()
+	resp, err := http.Get(u.String())
+	if err != nil {
+	} else {
+		resp.Body.Close()
+	}
+	return ""
+}
+
+func batchRunCommand(command string) {
+	wg := sync.WaitGroup{}
+	// failCount := 0
+	for _, devInfo := range hostsManager.maps {
+		wg.Add(1)
+		go func(ip string) {
+			runAndroidShell(ip, command)
+			wg.Done()
+		}(devInfo.IP)
+	}
+	wg.Wait()
+}
+
 func main() {
 	flag.Parse()
 	log.SetFlags(log.Lshortfile | log.LstdFlags)
 
-	http.HandleFunc("/version", func(w http.ResponseWriter, r *http.Request) {
+	r := mux.NewRouter()
+
+	r.HandleFunc("/version", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		json.NewEncoder(w).Encode(map[string]string{
 			"server":    version,
@@ -199,60 +176,37 @@ func main() {
 		})
 	})
 
-	http.HandleFunc("/echo", echo)
+	r.HandleFunc("/echo", echo)
 
-	batchRunCommand := func(command string) {
-		wg := sync.WaitGroup{}
-		failCount := 0
-		for _, devInfo := range hostsManager.maps {
-			wg.Add(1)
-			go func(host string) {
-				u := &url.URL{}
-				params := url.Values{}
-				params.Add("command", command)
-				u.RawQuery = params.Encode()
-				u.Scheme = "http"
-				u.Path = "/shell"
-				u.Scheme = "http"
-				u.Host = host + ":7912"
-				log.Println(u.String())
-				resp, err := http.Get(u.String())
-				if err != nil {
-					failCount++
-				} else {
-					resp.Body.Close()
-				}
-				wg.Done()
-			}(devInfo.IP)
-		}
-		wg.Wait()
-	}
-	http.HandleFunc("/api/v1/batch/unlock", func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("/api/v1/batch/unlock", func(w http.ResponseWriter, r *http.Request) {
 		batchRunCommand("am start -W --user 0 -a com.github.uiautomator.ACTION_IDENTIFY; input keyevent HOME")
 		io.WriteString(w, "Success")
 	})
-	http.HandleFunc("/api/v1/batch/lock", func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("/api/v1/batch/lock", func(w http.ResponseWriter, r *http.Request) {
 		batchRunCommand("input keyevent POWER")
 		io.WriteString(w, "Success")
 	})
-	http.HandleFunc("/api/v1/batch/shell", func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("/api/v1/batch/shell", func(w http.ResponseWriter, r *http.Request) {
 		command := r.FormValue("command")
 		batchRunCommand(command)
 		io.WriteString(w, "Success")
 	})
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+
+	// r.HandleFunc("/api/v1/phones/identify")
+	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		devices := make([]*proto.DeviceInfo, 0)
 		for _, info := range hostsManager.maps {
 			devices = append(devices, info)
 			// fmt.Printf("%s: %s %s %s\n", host, info.Serial, info.Brand, info.Model)
 		}
-		template.Must(template.ParseFiles("index.html")).Execute(w, devices)
+		tmpl := template.Must(template.New("").Delims("[[", "]]").ParseGlob("templates/*.html"))
+		tmpl.ExecuteTemplate(w, "index.html", devices)
 	})
-	http.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "favicon.ico")
+	r.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "assets/favicon.ico")
 	})
 
-	http.HandleFunc("/list", func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("/list", func(w http.ResponseWriter, r *http.Request) {
 		devices := make([]*proto.DeviceInfo, 0)
 		for _, info := range hostsManager.maps {
 			devices = append(devices, info)
@@ -261,5 +215,32 @@ func main() {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		json.NewEncoder(w).Encode(devices)
 	})
-	log.Fatal(http.ListenAndServe(*addr, nil))
+
+	r.HandleFunc("/devices/ip:{ip}/info", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		ip := vars["ip"]
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		json.NewEncoder(w).Encode(hostsManager.FromIP(ip))
+	})
+
+	r.HandleFunc("/devices/{udid}/info", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		udid := vars["udid"]
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		json.NewEncoder(w).Encode(hostsManager.FromUdid(udid))
+	})
+
+	r.HandleFunc("/devices/{udid}/identify", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		udid := vars["udid"]
+		dev := hostsManager.FromUdid(udid)
+		if dev == nil {
+			http.Error(w, "Device not found", 410)
+			return
+		}
+		runAndroidShell(dev.IP, "am start -W --user 0 -a com.github.uiautomator.ACTION_IDENTIFY")
+		io.WriteString(w, "Locate success")
+	}).Methods("POST")
+
+	log.Fatal(http.ListenAndServe(*addr, r))
 }
