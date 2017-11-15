@@ -29,8 +29,32 @@
       color: tomato;
     }
     
+    .color-yellow {
+      color: yellowgreen;
+    }
+    
     .fa-fix-height {
       line-height: 24px;
+    }
+    
+    .fa-battery-4 {
+      color: green;
+    }
+    
+    .fa-battery-3 {
+      color: yellowgreen;
+    }
+    
+    .fa-battery-2 {
+      color: yellow;
+    }
+    
+    .fa-battery-1 {
+      color: red;
+    }
+    
+    .fa-battery-0 {
+      color: red;
     }
   </style>
 </head>
@@ -91,7 +115,9 @@
             <td class="hidden-xs text-uppercase"><span v-text="d.hwaddr"></span></td>
             <td v-text="d.agentVersion"></td>
             <td>
-              <span class="color-green fa-fix-height fa fa-battery-full"> {{d.battery.level}}</span>
+              {{d.battery.level}}%
+              <span class="fa fa-bolt color-yellow" v-show="d.battery.status == 2"></span>
+              <span class="fa-fix-height fa" :class='"fa-battery-" + Math.ceil(d.battery.level/25)'></span>
             </td>
             <td>
               <template v-if="d.reserved == ''">

@@ -22,7 +22,7 @@ import (
 
 const (
 	version         = "dev"
-	atxAgentVersion = "0.0.9"
+	atxAgentVersion = "0.1.0"
 )
 
 var (
