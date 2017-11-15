@@ -228,7 +228,19 @@ func main() {
 		udid := vars["udid"]
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		json.NewEncoder(w).Encode(hostsManager.FromUdid(udid))
-	})
+	}).Methods("GET")
+
+	r.HandleFunc("/devices/{udid}/info", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		udid := vars["udid"]
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		if info := hostsManager.FromUdid(udid); info != nil {
+			json.NewDecoder(r.Body).Decode(info)
+			io.WriteString(w, "Success")
+			return
+		}
+		io.WriteString(w, "Failure, device "+udid+" not found")
+	}).Methods("POST")
 
 	r.HandleFunc("/devices/{udid}/identify", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)

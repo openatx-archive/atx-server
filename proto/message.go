@@ -1,6 +1,10 @@
 package proto
 
-import "encoding/json"
+import (
+	"encoding/json"
+
+	"github.com/openatx/androidutils"
+)
 
 type MessageType int
 
@@ -20,12 +24,14 @@ func (m *CommonMessage) MarshalJSON() []byte {
 }
 
 type DeviceInfo struct {
-	Udid            string `json:"udid"`   // Unique device identifier
-	Serial          string `json:"serial"` // ro.serialno
-	Brand           string `json:"brand"`  // ro.product.brand
-	Model           string `json:"model"`  // ro.product.model
-	HWAddr          string `json:"hwaddr"` // persist.sys.wifi.mac
-	IP              string `json:"ip,omitempty"`
-	AgentVersion    string `json:"agentVersion"`
-	ConnectionCount int    `json:"-"` // > 1 happended when phone redial server
+	Udid            string               `json:"udid"`   // Unique device identifier
+	Serial          string               `json:"serial"` // ro.serialno
+	Brand           string               `json:"brand"`  // ro.product.brand
+	Model           string               `json:"model"`  // ro.product.model
+	HWAddr          string               `json:"hwaddr"` // persist.sys.wifi.mac
+	IP              string               `json:"ip,omitempty"`
+	AgentVersion    string               `json:"agentVersion"`
+	ConnectionCount int                  `json:"-"` // > 1 happended when phone redial server
+	Reserved        string               `json:"reserved,omitempty"`
+	Battery         androidutils.Battery `json:"battery"`
 }

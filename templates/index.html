@@ -21,6 +21,14 @@
       color: green;
     }
     
+    .color-rest {
+      color: rgb(74, 201, 89);
+    }
+    
+    .color-busy {
+      color: tomato;
+    }
+    
     .fa-fix-height {
       line-height: 24px;
     }
@@ -39,12 +47,15 @@
         <button id="unlock-all" class="btn btn-sm btn-default"><i class="fa fa-unlock"></i> 全部解锁</button>
         <button id="lock-all" class="btn btn-sm btn-default"><i class="fa fa-lock"></i> 全部锁屏</button>
       </div>
-      <div class="form-group has-success has-feedback">
+      <div class="form-group">
         <!-- <label>Search</label> -->
         <div class="input-group input-group-sm">
           <!-- <div class="input-group-addon">Search</div> -->
           <div class="input-group-addon"><i class="fa fa-search"></i></div>
           <input type="text" class="form-control">
+          <div class="input-group-addon">
+            <strong v-text="devices.length"></strong>
+          </div>
         </div>
       </div>
     </form>
@@ -60,26 +71,38 @@
             <th class="hidden-xs">MAC</th>
             <th>Agent</th>
             <th>电量</th>
-            <th>Actions</th>
+            <th>状态</th>
+            <th>操作</th>
             <!-- <th class="hidden-xs">Other</th> -->
           </tr>
         </thead>
         <tbody>
-          <tr v-for="d in devices">
+          <tr v-for="d in devices" :key="d.udid">
             <td>
-              <input type="checkbox">
+              <input type="checkbox" disabled>
             </td>
             <td><span v-text="d.ip"></span></td>
-            <td v-text='d.serial'></td>
+            <td>
+              <span v-text='d.serial' class="hidden-xs"></span>
+              <span v-text='d.serial.slice(4)+"..."' class="visible-xs"></span>
+            </td>
             <td v-text="d.brand"></td>
             <td v-text="d.model"></td>
             <td class="hidden-xs text-uppercase"><span v-text="d.hwaddr"></span></td>
             <td v-text="d.agentVersion"></td>
             <td>
-              <span class="color-green fa-fix-height fa fa-battery-full"></span>
+              <span class="color-green fa-fix-height fa fa-battery-full"> {{d.battery.level}}</span>
             </td>
             <td>
-              <button @click="locate(d)" class="btn btn-sm btn-default"><i title="定位" class="fa fa-location-arrow"></i></button>
+              <template v-if="d.reserved == ''">
+                <i class="color-rest fa-fix-height fa fa-bed"></i> {{d.reserved}}
+              </template>
+              <template v-else>
+                <i class="color-busy fa-fix-height fa fa-wheelchair-alt"></i>
+              </template>
+            </td>
+            <td>
+              <button title="定位" @click="identify(d)" class="btn btn-sm btn-default"><i class="fa fa-location-arrow" v-bind:class="{'fa-spin': d.identifying}"></i></button>
             </td>
           </tr>
         </tbody>
@@ -129,15 +152,22 @@
         $.ajax({
           url: "/list",
         }).then(function(ret) {
-          this.devices = ret;
+          this.devices = ret.map(function(d) {
+            d.identifying = false;
+            return d
+          })
         }.bind(this))
       },
       methods: {
-        locate: function(d) {
+        identify: function(d) {
+          d.identifying = true;
           $.ajax({
-            url: "/devices/" + d.udid + "/identify",
-            method: "post",
-          })
+              url: "/devices/" + d.udid + "/identify",
+              method: "post",
+            })
+            .always(function() {
+              d.identifying = false
+            }.bind(this))
         }
       }
     })

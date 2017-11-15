@@ -59,3 +59,14 @@ func (t *HostsManager) Remove(udid string) {
 		}
 	}
 }
+
+func (t *HostsManager) Acquire(udid string) bool {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	info, ok := t.maps[udid]
+	if !ok {
+		return false
+	}
+	info.Reserved = "hzsunshx"
+	return true
+}
