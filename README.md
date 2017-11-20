@@ -40,5 +40,18 @@ $ curl /version
 }
 ```
 
+## 设备占用与释放
+占用
+
+```bash
+curl -X POST /devices/{query}/reserved
+```
+
+释放
+
+```bash
+curl -X DELETE /devices/{query}/reserved
+```
+
 # LICENSE
 [MIT](LICENSE)

@@ -68,8 +68,9 @@
     </div>
     <form class="form-inline">
       <div class="form-group">
-        <button id="unlock-all" class="btn btn-sm btn-default"><i class="fa fa-unlock"></i> 全部解锁</button>
-        <button id="lock-all" class="btn btn-sm btn-default"><i class="fa fa-lock"></i> 全部锁屏</button>
+        <button @click.prevent="batchUnlock" class="btn btn-sm btn-default"><i class="fa fa-unlock"></i> 全部解锁</button>
+        <button @click.prevent="batchLock" class="btn btn-sm btn-default"><i class="fa fa-lock"></i> 全部锁屏</button>
+        <button @click.prevent="batchIdentify" class="btn btn-sm btn-default"><i class="fa fa-location-arrow"></i> 全部定位</button>
       </div>
       <div class="form-group">
         <!-- <label>Search</label> -->
@@ -120,11 +121,11 @@
               <span class="fa-fix-height fa" :class='"fa-battery-" + Math.ceil(d.battery.level/25)'></span>
             </td>
             <td>
-              <template v-if="d.reserved == ''">
-                <i class="color-rest fa-fix-height fa fa-bed"></i> {{d.reserved}}
+              <template v-if="Boolean(d.reserved)">
+                <i class="color-busy fa-fix-height fa fa-wheelchair-alt"></i> {{d.reserved}}
               </template>
               <template v-else>
-                <i class="color-busy fa-fix-height fa fa-wheelchair-alt"></i>
+                <i class="color-rest fa-fix-height fa fa-bed"></i>
               </template>
             </td>
             <td>
@@ -136,38 +137,6 @@
     </div>
   </div>
   <script>
-    $(function() {
-      $("#unlock-all").click(function() {
-        var $message = $("#message")
-        $message.text("解锁中 ...")
-        $.ajax({
-            url: "/api/v1/batch/unlock",
-            method: "post",
-          })
-          .then(function(ret) {
-            $message.text("解锁完成");
-            setTimeout(function() {
-              $message.text("");
-            }, 1000); //.delay(3000).text("");
-          })
-      })
-
-      $("#lock-all").click(function() {
-        var $message = $("#message")
-        $message.text("锁屏中 ...")
-        $.ajax({
-            url: "/api/v1/batch/lock",
-            method: "post",
-          })
-          .then(function(ret) {
-            $message.text("锁屏完成");
-            setTimeout(function() {
-              $message.text("");
-            }, 1000); //.delay(3000).text("");
-          })
-      })
-    })
-
     new Vue({
       el: ".container-fluid",
       data: {
@@ -194,6 +163,27 @@
             .always(function() {
               d.identifying = false
             }.bind(this))
+        },
+        batchIdentify: function() {
+          $.ajax({
+            url: "/api/v1/batch/shell",
+            method: "post",
+            data: {
+              command: "am start -W -a com.github.uiautomator.ACTION_IDENTIFY -e theme red"
+            }
+          })
+        },
+        batchLock: function() {
+          $.ajax({
+            url: "/api/v1/batch/lock",
+            method: "post",
+          })
+        },
+        batchUnlock: function() {
+          $.ajax({
+            url: "/api/v1/batch/unlock",
+            method: "post",
+          })
         }
       }
     })

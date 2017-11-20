@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+	"strings"
 	"sync"
 
 	"github.com/openatx/atx-server/proto"
@@ -15,6 +17,13 @@ func NewHostsManager() *HostsManager {
 	return &HostsManager{
 		maps: make(map[string]*proto.DeviceInfo),
 	}
+}
+
+func (t *HostsManager) Lookup(query string) *proto.DeviceInfo {
+	if strings.HasPrefix(query, "ip:") {
+		return t.FromIP(query[3:])
+	}
+	return t.FromUdid(query)
 }
 
 // A return value of nil indicates not found
@@ -60,13 +69,23 @@ func (t *HostsManager) Remove(udid string) {
 	}
 }
 
-func (t *HostsManager) Acquire(udid string) bool {
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	info, ok := t.maps[udid]
-	if !ok {
-		return false
+func (t *HostsManager) Acquire(query string) error {
+	info := t.Lookup(query)
+	if info == nil {
+		return errors.New("device not found")
+	}
+	if info.Reserved != "" {
+		return errors.New("device already reserved")
 	}
 	info.Reserved = "hzsunshx"
-	return true
+	return nil
+}
+
+func (t *HostsManager) Release(query string) error {
+	info := t.Lookup(query)
+	if info == nil {
+		return errors.New("device not found")
+	}
+	info.Reserved = ""
+	return nil
 }
