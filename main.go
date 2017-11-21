@@ -17,6 +17,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/gorilla/websocket"
+	accesslog "github.com/mash/go-accesslog"
 	"github.com/openatx/atx-server/proto"
 )
 
@@ -214,24 +215,16 @@ func main() {
 		json.NewEncoder(w).Encode(devices)
 	})
 
-	r.HandleFunc("/devices/ip:{ip}/info", func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		ip := vars["ip"]
+	r.HandleFunc("/devices/{query}/info", func(w http.ResponseWriter, r *http.Request) {
+		query := mux.Vars(r)["query"]
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		json.NewEncoder(w).Encode(hostsManager.FromIP(ip))
-	})
-
-	r.HandleFunc("/devices/{udid}/info", func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		udid := vars["udid"]
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		info := hostsManager.FromUdid(udid)
+		info := hostsManager.Lookup(query)
 		if r.Method == "GET" {
 			json.NewEncoder(w).Encode(info)
 			return
 		}
 		if info == nil {
-			io.WriteString(w, "Failure, device "+udid+" not found")
+			io.WriteString(w, "Failure, device "+query+" not found")
 			return
 		}
 		json.NewDecoder(r.Body).Decode(info)
@@ -270,5 +263,6 @@ func main() {
 		io.WriteString(w, "Locate success")
 	}).Methods("POST")
 
-	log.Fatal(http.ListenAndServe(*addr, r))
+	rt := accesslog.NewLoggingHandler(r, HTTPLogger{})
+	log.Fatal(http.ListenAndServe(*addr, rt))
 }

@@ -104,7 +104,7 @@
         <tbody>
           <tr v-for="d in devices" :key="d.udid">
             <td>
-              <input type="checkbox" disabled>
+              <input type="checkbox" v-model="d.ready" @click="toggleReady(d)">
             </td>
             <td><span v-text="d.ip"></span></td>
             <td>
@@ -163,6 +163,16 @@
             .always(function() {
               d.identifying = false
             }.bind(this))
+        },
+        toggleReady: function(d) {
+          d.ready = !d.ready;
+          $.ajax({
+            url: "/devices/" + d.udid + "/info",
+            method: "post",
+            data: JSON.stringify({
+              ready: d.ready,
+            })
+          })
         },
         batchIdentify: function() {
           $.ajax({
