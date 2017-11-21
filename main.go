@@ -251,15 +251,15 @@ func main() {
 		io.WriteString(w, "Release success")
 	}).Methods("POST", "DELETE")
 
-	r.HandleFunc("/devices/{query}/identify", func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		query := vars["query"]
+	r.HandleFunc("/devices/{query}/shell", func(w http.ResponseWriter, r *http.Request) {
+		query := mux.Vars(r)["query"]
 		dev := hostsManager.Lookup(query)
 		if dev == nil {
 			http.Error(w, "Device not found", 410)
 			return
 		}
-		runAndroidShell(dev.IP, "am start -W --user 0 -a com.github.uiautomator.ACTION_IDENTIFY -e theme red")
+		command := r.FormValue("command")
+		runAndroidShell(dev.IP, command) //"am start -W --user 0 -a com.github.uiautomator.ACTION_IDENTIFY -e theme red")
 		io.WriteString(w, "Locate success")
 	}).Methods("POST")
 

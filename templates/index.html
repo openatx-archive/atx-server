@@ -157,8 +157,11 @@
         identify: function(d) {
           d.identifying = true;
           $.ajax({
-              url: "/devices/" + d.udid + "/identify",
+              url: "/devices/" + d.udid + "/shell",
               method: "post",
+              data: {
+                command: "input keyevent HOME && am start -W --user 0 -a com.github.uiautomator.ACTION_IDENTIFY -e theme red"
+              }
             })
             .always(function() {
               d.identifying = false
@@ -179,7 +182,7 @@
             url: "/api/v1/batch/shell",
             method: "post",
             data: {
-              command: "am start -W -a com.github.uiautomator.ACTION_IDENTIFY -e theme red"
+              command: "input keyevent HOME && am start -W -a com.github.uiautomator.ACTION_IDENTIFY -e theme red"
             }
           })
         },
