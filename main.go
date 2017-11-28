@@ -231,6 +231,13 @@ func main() {
 		io.WriteString(w, "Success")
 	}).Methods("GET", "POST")
 
+	// Must put in front of "/devices/{query}/reserved"
+	r.HandleFunc("/devices/:random/reserved", func(w http.ResponseWriter, r *http.Request) {
+		info, _ := hostsManager.Random()
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		json.NewEncoder(w).Encode(info)
+	}).Methods("POST")
+
 	r.HandleFunc("/devices/{query}/reserved", func(w http.ResponseWriter, r *http.Request) {
 		query := mux.Vars(r)["query"]
 		info := hostsManager.Lookup(query)

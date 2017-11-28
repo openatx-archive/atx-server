@@ -89,3 +89,15 @@ func (t *HostsManager) Release(query string) error {
 	info.Reserved = ""
 	return nil
 }
+
+func (t *HostsManager) Random() (devInfo *proto.DeviceInfo, err error) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	for _, info := range t.maps {
+		if info.Ready && info.Reserved == "" {
+			info.Reserved = "random"
+			return info, nil
+		}
+	}
+	return nil, errors.New("no devices avaliable")
+}
