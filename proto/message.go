@@ -32,6 +32,7 @@ type DeviceInfo struct {
 	IP           string               `json:"ip,omitempty"`
 	AgentVersion string               `json:"agentVersion"`
 	Battery      androidutils.Battery `json:"battery"`
+	Display      androidutils.Display `json:"display"`
 
 	ConnectionCount int    `json:"-"` // > 1 happended when phone redial server
 	Reserved        string `json:"reserved,omitempty"`
