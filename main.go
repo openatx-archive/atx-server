@@ -266,8 +266,11 @@ func main() {
 			return
 		}
 		command := r.FormValue("command")
-		runAndroidShell(dev.IP, command) //"am start -W --user 0 -a com.github.uiautomator.ACTION_IDENTIFY -e theme red")
-		io.WriteString(w, "Locate success")
+		output := runAndroidShell(dev.IP, command) //"am start -W --user 0 -a com.github.uiautomator.ACTION_IDENTIFY -e theme red")
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"output": output,
+		})
 	}).Methods("POST")
 
 	rt := accesslog.NewLoggingHandler(r, HTTPLogger{})
