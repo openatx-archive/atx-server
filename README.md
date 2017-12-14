@@ -9,25 +9,34 @@ go run main.go -addr :8000
 # APIs
 ## /list 接口
 
+其中udid是通过hwaddr, model, serial组合生成的
+
 ```bash
-$ curl http://localhost:8080/list
+$ curl $SERVER_URL/list
 [
     {
-        "serial": "654fdaf7d340",
-        "brand": "Xiaomi",
-        "model": "Redmi 4A",
-        "hwaddr": "",
-        "ip": "10.240.218.20"
-    },
-    {
-        "serial": "50d374ee",
-        "brand": "Xiaomi",
-        "model": "MI 4S",
-        "hwaddr": "64:cc:2e:7a:24:2b",
-        "ip": "10.242.57.253"
+        "udid": "741AEDR42P6YM-2c:57:31:4b:40:74-M2_E",
+        "serial": "741AEDR42P6YM",
+        "brand": "Meizu",
+        "model": "M2 E",
+        "hwaddr": "2c:57:31:4b:40:74",
+        "ip": "10.240.218.20",
+        "agentVersion": "0.1.1",
+        "battery": {},
+        "display": {
+            "width": 1080,
+            "height": 1920
+        }
     }
 ]
 ```
+
+## /devices/{query}/info
+```bash
+$ curl $SERVER_URL/devices/ip:10.0.0.1/info
+```
+
+返回值同/list的的单个结果，这里就不写了。
 
 ## /version
 `atx-agent`通过检测该接口确定是否升级
@@ -40,17 +49,31 @@ $ curl /version
 }
 ```
 
+## 执行shell命令
+```bash
+$ curl -X POST -F command="pwd" $SERVER_URL/devices/{query}/shell
+{
+    "output": "/"
+}
+```
+
 ## 设备占用与释放
 占用
 
 ```bash
-curl -X POST /devices/{query}/reserved
+curl -X POST $SERVER_URL/devices/{query}/reserved
 ```
 
 释放
 
 ```bash
-curl -X DELETE /devices/{query}/reserved
+curl -X DELETE $SERVER_URL/devices/{query}/reserved
+```
+
+随机占用一台设备
+
+```bash
+curl -X POST $SERVER_URL/devices/:random/reserved
 ```
 
 # LICENSE

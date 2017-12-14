@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -135,17 +136,18 @@ func unlockAll() {
 	}
 }
 
-func runAndroidShell(ip string, command string) string {
+func runAndroidShell(ip string, command string) (output string, err error) {
 	u, _ := url.Parse("http://" + ip + ":7912/shell")
 	params := url.Values{}
 	params.Add("command", command)
 	u.RawQuery = params.Encode()
 	resp, err := http.Get(u.String())
 	if err != nil {
-	} else {
-		resp.Body.Close()
+		return
 	}
-	return ""
+	defer resp.Body.Close()
+	jsondata, err := ioutil.ReadAll(resp.Body)
+	return string(jsondata), err
 }
 
 func batchRunCommand(command string) {
@@ -266,8 +268,15 @@ func main() {
 			return
 		}
 		command := r.FormValue("command")
-		runAndroidShell(dev.IP, command) //"am start -W --user 0 -a com.github.uiautomator.ACTION_IDENTIFY -e theme red")
-		io.WriteString(w, "Locate success")
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		output, err := runAndroidShell(dev.IP, command)
+		if err != nil {
+			json.NewEncoder(w).Encode(map[string]string{
+				"error": err.Error(),
+			})
+		} else {
+			io.WriteString(w, output) // the output is already json
+		}
 	}).Methods("POST")
 
 	rt := accesslog.NewLoggingHandler(r, HTTPLogger{})
