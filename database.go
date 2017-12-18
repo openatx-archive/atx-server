@@ -1,13 +1,33 @@
 package main
 
 import (
+	"context"
 	"log"
 	"strings"
 
 	"github.com/openatx/atx-server/proto"
-
-	r "gopkg.in/gorethink/gorethink.v3"
+	r "gopkg.in/gorethink/gorethink.v4"
 )
+
+var (
+	db *RdbUtils
+)
+
+func init() {
+	r.SetTags("gorethink", "json")
+	r.SetVerbose(true)
+	session, err := r.Connect(r.ConnectOpts{
+		Address:  "localhost:28015",
+		Database: "atxserver",
+		// InitialCap: 10,
+		// MaxOpen:    10,
+	})
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	db = &RdbUtils{session}
+}
 
 type RdbUtils struct {
 	session *r.Session
@@ -62,52 +82,21 @@ func (db *RdbUtils) DeviceList() (devices []proto.DeviceInfo) {
 	return
 }
 
-var db *RdbUtils
-
-func init() {
-	r.SetTags("gorethink", "json")
-	r.SetVerbose(true)
-	session, err := r.Connect(r.ConnectOpts{
-		Address:  "localhost:28015",
-		Database: "atxserver",
-		// InitialCap: 10,
-		// MaxOpen:    10,
+func (db *RdbUtils) WatchDeviceChanges() (feeds chan r.ChangeResponse, cancel func(), err error) {
+	ctx, cancel := context.WithCancel(context.Background())
+	res, err := r.Table("devices").Changes().Run(db.session, r.RunOpts{
+		Context: ctx,
 	})
-
 	if err != nil {
-		log.Fatal(err)
+		return
 	}
-	db = &RdbUtils{session}
-}
-
-func main() {
-	log.Println("main")
-	if err := db.DBCreateAnyway("atxserver"); err != nil {
-		log.Fatal(err)
-	}
-	if err := db.TableCreateAnyway("devices"); err != nil {
-		log.Fatal(err)
-	}
-	log.Println("table created")
-	db.UpdateOrInsertDevice(proto.DeviceInfo{
-		Udid:   "aaaabbbbccccdddd1234",
-		Serial: "abcd123456",
-		// Brand: "Huawei",
-	})
-
-	log.Println(db.DeviceList())
-
-	feeds, err := r.Table("devices").Changes().Run(db.session)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer feeds.Close()
+	feeds = make(chan r.ChangeResponse)
 	var change r.ChangeResponse
-	for feeds.Next(&change) {
-		// var devInfo proto.DeviceInfo
-		// log.Println(devInfo)
-		// log.Println(change.State)
-		log.Println(change.NewValue)
-		log.Println(change.OldValue)
-	}
+	go func() {
+		for res.Next(&change) {
+			feeds <- change
+		}
+		close(feeds)
+	}()
+	return
 }
