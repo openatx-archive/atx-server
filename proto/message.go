@@ -24,15 +24,15 @@ func (m *CommonMessage) MarshalJSON() []byte {
 }
 
 type DeviceInfo struct {
-	Udid         string               `json:"udid"`   // Unique device identifier
-	Serial       string               `json:"serial"` // ro.serialno
-	Brand        string               `json:"brand"`  // ro.product.brand
-	Model        string               `json:"model"`  // ro.product.model
-	HWAddr       string               `json:"hwaddr"` // persist.sys.wifi.mac
+	Udid         string               `json:"udid"`             // Unique device identifier
+	Serial       string               `json:"serial,omitempty"` // ro.serialno
+	Brand        string               `json:"brand,omitempty"`  // ro.product.brand
+	Model        string               `json:"model,omitempty"`  // ro.product.model
+	HWAddr       string               `json:"hwaddr,omitempty"` // persist.sys.wifi.mac
 	IP           string               `json:"ip,omitempty"`
-	AgentVersion string               `json:"agentVersion"`
-	Battery      androidutils.Battery `json:"battery"`
-	Display      androidutils.Display `json:"display"`
+	AgentVersion string               `json:"agentVersion,omitempty"`
+	Battery      androidutils.Battery `json:"battery,omitempty"`
+	Display      androidutils.Display `json:"display,omitempty"`
 
 	ConnectionCount int    `json:"-"` // > 1 happended when phone redial server
 	Reserved        string `json:"reserved,omitempty"`
