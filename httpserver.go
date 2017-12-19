@@ -111,11 +111,12 @@ func newHandler() http.Handler {
 	})
 
 	r.HandleFunc("/list", func(w http.ResponseWriter, r *http.Request) {
-		devices := make([]*proto.DeviceInfo, 0)
-		for _, info := range hostsManager.maps {
-			devices = append(devices, info)
-			// fmt.Printf("%s: %s %s %s\n", host, info.Serial, info.Brand, info.Model)
-		}
+		devices := db.DeviceList()
+		// devices := make([]*proto.DeviceInfo, 0)
+		// for _, info := range hostsManager.maps {
+		// 	devices = append(devices, info)
+		// 	// fmt.Printf("%s: %s %s %s\n", host, info.Serial, info.Brand, info.Model)
+		// }
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		json.NewEncoder(w).Encode(devices)
 	})
@@ -133,6 +134,7 @@ func newHandler() http.Handler {
 			return
 		}
 		json.NewDecoder(r.Body).Decode(info)
+		db.UpdateOrInsertDevice(*info) // TODO: update database
 		io.WriteString(w, "Success")
 	}).Methods("GET", "POST")
 
@@ -156,10 +158,20 @@ func newHandler() http.Handler {
 				return
 			}
 			info.Reserved = "hzsunshx"
+			db.UpdateOrInsertDevice(proto.DeviceInfo{
+				Udid:  info.Udid,
+				Using: newBool(true),
+			})
 			io.WriteString(w, "Success")
 			return
 		}
 		info.Reserved = ""
+		db.UpdateOrInsertDevice(proto.DeviceInfo{
+			Udid:  info.Udid,
+			Using: newBool(false),
+		})
+		// db.UpdateOrInsertDevice(*info)
+		// TODO: implement lookup in rethinkdb
 		io.WriteString(w, "Release success")
 	}).Methods("POST", "DELETE")
 

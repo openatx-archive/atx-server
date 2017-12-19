@@ -57,23 +57,27 @@ $ curl -X POST -F command="pwd" $SERVER_URL/devices/{query}/shell
 }
 ```
 
-## 设备占用与释放
-占用
+## 设备占用
+成功状态码200,失败403
 
 ```bash
-curl -X POST $SERVER_URL/devices/{query}/reserved
+$ curl -X POST $SERVER_URL/devices/{query}/reserved
+Success
 ```
 
-释放
+## 设备释放
+成功状态码200,失败403
 
 ```bash
-curl -X DELETE $SERVER_URL/devices/{query}/reserved
+$ curl -X DELETE $SERVER_URL/devices/{query}/reserved
+Release success
 ```
 
 随机占用一台设备
 
 ```bash
-curl -X POST $SERVER_URL/devices/:random/reserved
+$ curl -X POST $SERVER_URL/devices/:random/reserved
+Success
 ```
 
 # LICENSE

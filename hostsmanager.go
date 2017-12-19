@@ -94,7 +94,7 @@ func (t *HostsManager) Random() (devInfo *proto.DeviceInfo, err error) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	for _, info := range t.maps {
-		if info.Ready && info.Reserved == "" {
+		if info.Ready != nil && *info.Ready == true && info.Reserved == "" {
 			info.Reserved = "random"
 			return info, nil
 		}

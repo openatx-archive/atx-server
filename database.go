@@ -13,12 +13,12 @@ var (
 	db *RdbUtils
 )
 
-func init() {
+func initDB(address, dbName string) {
 	r.SetTags("gorethink", "json")
 	r.SetVerbose(true)
 	session, err := r.Connect(r.ConnectOpts{
-		Address:  "localhost:28015",
-		Database: "atxserver",
+		Address:  address,
+		Database: dbName,
 		// InitialCap: 10,
 		// MaxOpen:    10,
 	})
@@ -82,12 +82,13 @@ func (db *RdbUtils) DeviceList() (devices []proto.DeviceInfo) {
 	return
 }
 
-func (db *RdbUtils) SetDeviceOnline(udid string) {
-
-}
-
-func (db *RdbUtils) SetDeviceOffline(udid string) {
-
+// SetDevicePresent change present status
+func (db *RdbUtils) SetDeviceStatus(udid string, present bool, ready bool) error {
+	return db.UpdateOrInsertDevice(proto.DeviceInfo{
+		Udid:    udid,
+		Present: &present,
+		Ready:   &ready,
+	})
 }
 
 func (db *RdbUtils) WatchDeviceChanges() (feeds chan r.ChangeResponse, cancel func(), err error) {

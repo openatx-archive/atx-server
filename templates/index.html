@@ -121,9 +121,9 @@
               <span class="fa-fix-height fa" :class='"fa-battery-" + Math.ceil(d.battery.level/25)'></span>
             </td>
             <td>
-              <template v-if="Boolean(d.reserved)">
+              <template v-if="d.using">
                 <span @dblclick="release(d)">
-                  <i class="color-busy fa-fix-height fa fa-wheelchair-alt"></i> {{d.reserved}}
+                  <i class="color-busy fa-fix-height fa fa-wheelchair-alt"></i>
                 </span>
               </template>
               <template v-else>
@@ -147,8 +147,21 @@
       },
       mounted: function() {
         this.loadDevices()
+        this.loadWatches()
       },
       methods: {
+        loadWatches: function() {
+          var ws = new WebSocket("ws://" + location.host + "/feeds")
+          ws.onopen = function() {
+            console.log("websocket connected")
+          }
+          ws.onmessage = function(evt) {
+            console.log("websocket recv:", evt.data)
+          }
+          ws.onclose = function(evt) {
+            console.log("websocket closed")
+          }
+        },
         loadDevices: function() {
           return $.ajax({
             url: "/list",

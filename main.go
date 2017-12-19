@@ -22,7 +22,11 @@ const (
 	atxAgentVersion = "0.1.1"
 )
 
-var addr = flag.String("addr", ":8080", "http service address")
+var (
+	addr    = flag.String("addr", ":8080", "http service address")
+	rdbAddr = flag.String("rdbaddr", "localhost:28015", "rethinkdb address")
+	rdbName = flag.String("rdbname", "atxserver", "rethinkdb database name")
+)
 
 func handleWebsocketMessage(host string, message []byte) {
 	msg := &proto.CommonMessage{}
@@ -79,8 +83,11 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	devInfo.IP = host
 	log.Debugf("client ip:%s product:%s brand:%s", devInfo.IP, devInfo.Model, devInfo.Brand)
 
+	devInfo.Present = newBool(true)
+	db.UpdateOrInsertDevice(*devInfo)
 	hostsManager.AddFromDeviceInfo(devInfo)
 	defer func(udid string) {
+		db.SetDeviceStatus(udid, false, false) // not present and not ready
 		hostsManager.Remove(udid)
 	}(devInfo.Udid)
 
@@ -151,5 +158,7 @@ func main() {
 	// log.SetFlags(log.Lshortfile | log.LstdFlags)
 	log.SetLevel(log.DebugLevel)
 	log.SetFormatter(&log.TextFormatter{})
+
+	initDB(*rdbAddr, *rdbName)
 	log.Fatal(http.ListenAndServe(*addr, newHandler()))
 }
