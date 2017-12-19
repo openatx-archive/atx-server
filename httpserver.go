@@ -127,7 +127,11 @@ func newHandler() http.Handler {
 		}
 		// POST
 		var info proto.DeviceInfo
-		json.NewDecoder(r.Body).Decode(&info)
+		if err := json.NewDecoder(r.Body).Decode(&info); err != nil {
+			io.WriteString(w, err.Error())
+			return
+		}
+		info.Udid = udid
 		db.UpdateOrInsertDevice(info) // TODO: update database
 		io.WriteString(w, "Success")
 	}).Methods("GET", "POST")
