@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"flag"
-	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -23,24 +22,25 @@ const (
 )
 
 var (
-	addr    = flag.String("addr", ":8080", "http service address")
+	addr    = flag.String("addr", ":8000", "http service address")
 	rdbAddr = flag.String("rdbaddr", "localhost:28015", "rethinkdb address")
 	rdbName = flag.String("rdbname", "atxserver", "rethinkdb database name")
 )
 
 func handleWebsocketMessage(host string, message []byte) {
-	msg := &proto.CommonMessage{}
-	reader := json.NewDecoder(bytes.NewReader(message))
-	if err := reader.Decode(msg); err != nil {
-		return
-	}
-	fmt.Printf("msg type: %v\n", msg.Type)
-	if msg.Type == proto.DeviceInfoMessage {
-		jsonData, _ := json.Marshal(msg.Data)
-		devInfo := hostsManager.maps[host] // TODO: lock and unlock
-		json.NewDecoder(bytes.NewReader(jsonData)).Decode(devInfo)
-		fmt.Printf("brand: %s\n", devInfo.Brand)
-	}
+	return
+	// msg := &proto.CommonMessage{}
+	// reader := json.NewDecoder(bytes.NewReader(message))
+	// if err := reader.Decode(msg); err != nil {
+	// 	return
+	// }
+	// fmt.Printf("msg type: %v\n", msg.Type)
+	// if msg.Type == proto.DeviceInfoMessage {
+	// 	jsonData, _ := json.Marshal(msg.Data)
+	// 	// devInfo := hostsManager.maps[host] // TODO: lock and unlock
+	// 	json.NewDecoder(bytes.NewReader(jsonData)).Decode(devInfo)
+	// 	fmt.Printf("brand: %s\n", devInfo.Brand)
+	// }
 }
 
 func echo(w http.ResponseWriter, r *http.Request) {
@@ -85,10 +85,8 @@ func echo(w http.ResponseWriter, r *http.Request) {
 
 	devInfo.Present = newBool(true)
 	db.UpdateOrInsertDevice(*devInfo)
-	hostsManager.AddFromDeviceInfo(devInfo)
 	defer func(udid string) {
 		db.SetDeviceStatus(udid, false, false) // not present and not ready
-		hostsManager.Remove(udid)
 	}(devInfo.Udid)
 
 	// ping ticker
@@ -120,12 +118,6 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func unlockAll() {
-	for host := range hostsManager.maps {
-		fmt.Printf("unlock %s\n", host)
-	}
-}
-
 func runAndroidShell(ip string, command string) (output string, err error) {
 	u, _ := url.Parse("http://" + ip + ":7912/shell")
 	params := url.Values{}
@@ -143,7 +135,7 @@ func runAndroidShell(ip string, command string) (output string, err error) {
 func batchRunCommand(command string) {
 	wg := sync.WaitGroup{}
 	// failCount := 0
-	for _, devInfo := range hostsManager.maps {
+	for _, devInfo := range db.DeviceList() {
 		wg.Add(1)
 		go func(ip string) {
 			runAndroidShell(ip, command)

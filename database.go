@@ -2,10 +2,11 @@ package main
 
 import (
 	"context"
-	"log"
+	"encoding/json"
 	"strings"
 
 	"github.com/openatx/atx-server/proto"
+	log "github.com/sirupsen/logrus"
 	r "gopkg.in/gorethink/gorethink.v4"
 )
 
@@ -27,6 +28,11 @@ func initDB(address, dbName string) {
 		log.Fatal(err)
 	}
 	db = &RdbUtils{session}
+
+	// reset all device status
+	r.Table("devices").Update(map[string]bool{
+		"present": false,
+	}).Exec(session)
 }
 
 type RdbUtils struct {
@@ -75,10 +81,36 @@ func (db *RdbUtils) UpdateOrInsertDevice(dev proto.DeviceInfo) error {
 func (db *RdbUtils) DeviceList() (devices []proto.DeviceInfo) {
 	res, err := r.Table("devices").Run(db.session)
 	if err != nil {
+		log.Error(err)
 		return nil
 	}
 	defer res.Close()
 	res.All(&devices)
+	return
+}
+
+func (db *RdbUtils) DeviceGet(udid string) (info proto.DeviceInfo, err error) {
+	res, err := r.Table("devices").Get(udid).Run(db.session)
+	if err != nil {
+		return
+	}
+	defer res.Close()
+	err = res.One(&info)
+	return
+}
+
+func (db *RdbUtils) DeviceFindAll(info proto.DeviceInfo) (infos []proto.DeviceInfo) {
+	infojson, _ := json.Marshal(info)
+	log.Debugf("query %s", string(infojson))
+	res, err := r.Table("devices").Filter(info).Run(db.session)
+	if err != nil {
+		log.Error(err)
+		return nil
+	}
+	defer res.Close()
+	if err := res.All(&infos); err != nil {
+		log.Error(err)
+	}
 	return
 }
 

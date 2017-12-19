@@ -21,7 +21,6 @@ var (
 			return true
 		},
 	}
-	hostsManager = NewHostsManager()
 
 	// Time allowed to write message to the client
 	wsWriteWait = 10 * time.Second
@@ -53,7 +52,9 @@ func newHandler() http.Handler {
 		defer ws.Close()
 		feeds, cancel, err := db.WatchDeviceChanges()
 		if err != nil {
-			ws.WriteMessage(websocket.TextMessage, []byte("database error: "+err.Error()))
+			ws.WriteJSON(map[string]string{
+				"error": err.Error(),
+			})
 			return
 		}
 		go func() {
@@ -98,13 +99,8 @@ func newHandler() http.Handler {
 
 	// r.HandleFunc("/api/v1/phones/identify")
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		devices := make([]*proto.DeviceInfo, 0)
-		for _, info := range hostsManager.maps {
-			devices = append(devices, info)
-			// fmt.Printf("%s: %s %s %s\n", host, info.Serial, info.Brand, info.Model)
-		}
 		tmpl := template.Must(template.New("").Delims("[[", "]]").ParseGlob("templates/*.html"))
-		tmpl.ExecuteTemplate(w, "index.html", devices)
+		tmpl.ExecuteTemplate(w, "index.html", nil)
 	})
 	r.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "assets/favicon.ico")
@@ -112,52 +108,56 @@ func newHandler() http.Handler {
 
 	r.HandleFunc("/list", func(w http.ResponseWriter, r *http.Request) {
 		devices := db.DeviceList()
-		// devices := make([]*proto.DeviceInfo, 0)
-		// for _, info := range hostsManager.maps {
-		// 	devices = append(devices, info)
-		// 	// fmt.Printf("%s: %s %s %s\n", host, info.Serial, info.Brand, info.Model)
-		// }
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		json.NewEncoder(w).Encode(devices)
 	})
 
 	r.HandleFunc("/devices/{query}/info", func(w http.ResponseWriter, r *http.Request) {
 		query := mux.Vars(r)["query"]
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		info := hostsManager.Lookup(query)
-		if r.Method == "GET" {
-			json.NewEncoder(w).Encode(info)
-			return
-		}
-		if info == nil {
+		udid, err := deviceQueryToUdid(query)
+		if err != nil {
 			io.WriteString(w, "Failure, device "+query+" not found")
 			return
 		}
-		json.NewDecoder(r.Body).Decode(info)
-		db.UpdateOrInsertDevice(*info) // TODO: update database
+		if r.Method == "GET" {
+			w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+			info, _ := db.DeviceGet(udid)
+			json.NewEncoder(w).Encode(info)
+			return
+		}
+		// POST
+		var info proto.DeviceInfo
+		json.NewDecoder(r.Body).Decode(&info)
+		db.UpdateOrInsertDevice(info) // TODO: update database
 		io.WriteString(w, "Success")
 	}).Methods("GET", "POST")
 
+	// TODO
 	// Must put in front of "/devices/{query}/reserved"
-	r.HandleFunc("/devices/:random/reserved", func(w http.ResponseWriter, r *http.Request) {
-		info, _ := hostsManager.Random()
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		json.NewEncoder(w).Encode(info)
-	}).Methods("POST")
+	// r.HandleFunc("/devices/:random/reserved", func(w http.ResponseWriter, r *http.Request) {
+	// 	info, _ := hostsManager.Random()
+	// 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	// 	json.NewEncoder(w).Encode(info)
+	// }).Methods("POST")
 
 	r.HandleFunc("/devices/{query}/reserved", func(w http.ResponseWriter, r *http.Request) {
 		query := mux.Vars(r)["query"]
-		info := hostsManager.Lookup(query)
-		if info == nil {
-			http.Error(w, "Device not found", http.StatusGone)
+		udid, err := deviceQueryToUdid(query)
+		// info := hostsManager.Lookup(query)
+		if err != nil {
+			http.Error(w, "Device not found "+err.Error(), http.StatusGone)
 			return
 		}
 		if r.Method == "POST" {
-			if info.Reserved != "" {
+			info, err := db.DeviceGet(udid)
+			if err != nil {
+				http.Error(w, "Device get error "+err.Error(), http.StatusGone)
+				return
+			}
+			if toBool(info.Using) {
 				http.Error(w, "Device is using", http.StatusForbidden)
 				return
 			}
-			info.Reserved = "hzsunshx"
 			db.UpdateOrInsertDevice(proto.DeviceInfo{
 				Udid:  info.Udid,
 				Using: newBool(true),
@@ -165,26 +165,30 @@ func newHandler() http.Handler {
 			io.WriteString(w, "Success")
 			return
 		}
-		info.Reserved = ""
+		// DELETE
 		db.UpdateOrInsertDevice(proto.DeviceInfo{
-			Udid:  info.Udid,
+			Udid:  udid,
 			Using: newBool(false),
 		})
-		// db.UpdateOrInsertDevice(*info)
-		// TODO: implement lookup in rethinkdb
 		io.WriteString(w, "Release success")
 	}).Methods("POST", "DELETE")
 
 	r.HandleFunc("/devices/{query}/shell", func(w http.ResponseWriter, r *http.Request) {
 		query := mux.Vars(r)["query"]
-		dev := hostsManager.Lookup(query)
-		if dev == nil {
+		udid, err := deviceQueryToUdid(query)
+		if err != nil {
 			http.Error(w, "Device not found", 410)
 			return
 		}
+		info, err := db.DeviceGet(udid)
+		if err != nil {
+			http.Error(w, "Device get error "+err.Error(), 500)
+			return
+		}
+
 		command := r.FormValue("command")
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		output, err := runAndroidShell(dev.IP, command)
+		output, err := runAndroidShell(info.IP, command)
 		if err != nil {
 			json.NewEncoder(w).Encode(map[string]string{
 				"error": err.Error(),

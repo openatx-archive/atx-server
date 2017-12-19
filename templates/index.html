@@ -21,6 +21,10 @@
       color: green;
     }
     
+    .color-red {
+      color: red;
+    }
+    
     .color-rest {
       color: rgb(74, 201, 89);
     }
@@ -56,6 +60,11 @@
     .fa-battery-0 {
       color: red;
     }
+    
+    tr.offline {
+      /* background-color: red; */
+      color: gray;
+    }
   </style>
 </head>
 
@@ -64,6 +73,11 @@
     <div class="row">
       <div class="col-md-4">
         <h3>ATX 手机设备管理</h3>
+      </div>
+      <div class="col-md-12" v-if="errmsg">
+        <p class="color-red">{{errmsg}}
+          <button class="btn btn-warning btn-xs" @click="loadWatches">点击重连</button>
+        </p>
       </div>
     </div>
     <form class="form-inline">
@@ -102,9 +116,9 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="d in devices" :key="d.udid">
+          <tr v-for="d in devices" :key="d.udid" v-bind:class='{"offline": !d.present}'>
             <td>
-              <input type="checkbox" v-model="d.ready" @click="toggleReady(d)">
+              <input type="checkbox" :disabled="!d.present" v-model="d.ready" @click="toggleReady(d)">
             </td>
             <td><span v-text="d.ip"></span></td>
             <td>
@@ -117,8 +131,10 @@
             <td v-text="d.agentVersion"></td>
             <td>
               {{d.battery.level}}%
-              <span class="fa fa-bolt color-yellow" v-show="d.battery.status == 2"></span>
-              <span class="fa-fix-height fa" :class='"fa-battery-" + Math.ceil(d.battery.level/25)'></span>
+              <template v-if="d.present">
+                <span class="fa fa-bolt color-yellow" v-show="d.battery.status == 2"></span>
+                <span class="fa-fix-height fa" :class='"fa-battery-" + Math.ceil(d.battery.level/25)'></span>
+              </template>
             </td>
             <td>
               <template v-if="d.using">
@@ -131,7 +147,7 @@
               </template>
             </td>
             <td>
-              <button title="定位" @click="identify(d)" class="btn btn-sm btn-default"><i class="fa fa-location-arrow" v-bind:class="{'fa-spin': d.identifying}"></i></button>
+              <button title="定位" :disabled="!d.present" @click="identify(d)" class="btn btn-sm btn-default"><i class="fa fa-location-arrow" v-bind:class="{'fa-spin': d.identifying}"></i></button>
             </td>
           </tr>
         </tbody>
@@ -142,25 +158,48 @@
     new Vue({
       el: ".container-fluid",
       data: {
-        name: "He",
-        devices: []
+        devices: [],
+        errmsg: "",
       },
       mounted: function() {
-        this.loadDevices()
         this.loadWatches()
       },
       methods: {
         loadWatches: function() {
+          // init data
+          this.loadDevices()
+          this.errmsg = "Connecting"
+
           var ws = new WebSocket("ws://" + location.host + "/feeds")
           ws.onopen = function() {
             console.log("websocket connected")
-          }
+            this.errmsg = "";
+          }.bind(this)
           ws.onmessage = function(evt) {
-            console.log("websocket recv:", evt.data)
-          }
+            var jdata = JSON.parse(evt.data);
+            if (jdata.error) {
+              this.errmsg = jdata.error;
+              return
+            }
+            var dataNew = jdata.new,
+              dataOld = jdata.old;
+            if (dataNew && dataOld) {
+              this.devices = this.devices.map(function(device) {
+                if (device.udid == dataNew.udid) {
+                  dataNew.identifying = false;
+                  return dataNew;
+                }
+                return device;
+              })
+            } else {
+              this.loadDevices();
+            }
+            // console.log("websocket recv:", evt.data)
+          }.bind(this)
           ws.onclose = function(evt) {
             console.log("websocket closed")
-          }
+            this.errmsg = "Server connection closed. " + this.errmsg;
+          }.bind(this)
         },
         loadDevices: function() {
           return $.ajax({

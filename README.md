@@ -58,7 +58,7 @@ $ curl -X POST -F command="pwd" $SERVER_URL/devices/{query}/shell
 ```
 
 ## 设备占用
-成功状态码200,失败403
+状态码 成功200,失败403
 
 ```bash
 $ curl -X POST $SERVER_URL/devices/{query}/reserved
@@ -66,7 +66,7 @@ Success
 ```
 
 ## 设备释放
-成功状态码200,失败403
+状态码 成功200,失败403
 
 ```bash
 $ curl -X DELETE $SERVER_URL/devices/{query}/reserved
