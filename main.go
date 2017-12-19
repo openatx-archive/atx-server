@@ -6,7 +6,6 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net"
 	"net/http"
 	"net/url"
@@ -15,6 +14,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/openatx/atx-server/proto"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -46,10 +46,10 @@ func echo(w http.ResponseWriter, r *http.Request) {
 		log.Print("upgrade:", err)
 		return
 	}
-	log.Printf("new connection: %s", host)
+	log.Debugf("new connection: %s", host)
 
 	defer func() {
-		log.Printf("connection lost: %s", host)
+		log.Debugf("connection lost: %s", host)
 		ws.Close()
 	}()
 
@@ -62,22 +62,23 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	// Read device info
 	message := &proto.CommonMessage{}
 	if err := ws.ReadJSON(message); err != nil {
-		log.Println("error: read json message")
+		log.Warn("error: read json message")
 		return
 	}
 	if message.Type != proto.DeviceInfoMessage {
-		log.Printf("error: first message must be device info, but got %v", message.Type)
+		log.Warnf("error: first message must be device info, but got %v", message.Type)
 		return
 	}
 	devInfo := new(proto.DeviceInfo)
 	jsonData, _ := json.Marshal(message.Data)
 	json.NewDecoder(bytes.NewReader(jsonData)).Decode(devInfo)
 	if devInfo.Udid == "" {
-		log.Printf("error: udid is empty")
+		log.Warnf("error: udid is empty")
 		return
 	}
 	devInfo.IP = host
-	log.Printf("client ip:%s product:%s brand:%s", devInfo.IP, devInfo.Model, devInfo.Brand)
+	log.Debugf("client ip:%s product:%s brand:%s", devInfo.IP, devInfo.Model, devInfo.Brand)
+
 	hostsManager.AddFromDeviceInfo(devInfo)
 	defer func(udid string) {
 		hostsManager.Remove(udid)
@@ -147,7 +148,8 @@ func batchRunCommand(command string) {
 
 func main() {
 	flag.Parse()
-	log.SetFlags(log.Lshortfile | log.LstdFlags)
+	// log.SetFlags(log.Lshortfile | log.LstdFlags)
+	log.SetLevel(log.DebugLevel)
+	log.SetFormatter(&log.TextFormatter{})
 	log.Fatal(http.ListenAndServe(*addr, newHandler()))
-
 }

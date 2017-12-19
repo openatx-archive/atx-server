@@ -82,6 +82,14 @@ func (db *RdbUtils) DeviceList() (devices []proto.DeviceInfo) {
 	return
 }
 
+func (db *RdbUtils) SetDeviceOnline(udid string) {
+
+}
+
+func (db *RdbUtils) SetDeviceOffline(udid string) {
+
+}
+
 func (db *RdbUtils) WatchDeviceChanges() (feeds chan r.ChangeResponse, cancel func(), err error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	res, err := r.Table("devices").Changes().Run(db.session, r.RunOpts{

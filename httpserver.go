@@ -12,10 +12,15 @@ import (
 	"github.com/gorilla/websocket"
 	accesslog "github.com/mash/go-accesslog"
 	"github.com/openatx/atx-server/proto"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
-	upgrader     = websocket.Upgrader{}
+	upgrader = websocket.Upgrader{
+		CheckOrigin: func(r *http.Request) bool {
+			return true
+		},
+	}
 	hostsManager = NewHostsManager()
 
 	// Time allowed to write message to the client
@@ -59,6 +64,7 @@ func newHandler() http.Handler {
 					break
 				}
 			}
+			log.Debug("ws read closed")
 		}()
 		for change := range feeds {
 			buf := bytes.NewBuffer(nil)
@@ -71,6 +77,7 @@ func newHandler() http.Handler {
 				break
 			}
 		}
+		log.Debug("ws write closed")
 	})
 
 	r.HandleFunc("/api/v1/batch/unlock", func(w http.ResponseWriter, r *http.Request) {
