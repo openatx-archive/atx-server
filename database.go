@@ -29,7 +29,9 @@ func initDB(address, dbName string) {
 	}
 	db = &RdbUtils{session}
 
-	// reset all device status
+	// initial state
+	db.DBCreateAnyway(dbName)
+	db.TableCreateAnyway("devices")
 	r.Table("devices").Update(map[string]bool{
 		"present": false,
 	}).Exec(session)
