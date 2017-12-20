@@ -94,7 +94,7 @@ func (db *RdbUtils) DeviceUpdate(dev proto.DeviceInfo) error {
 }
 
 func (db *RdbUtils) DeviceList() (devices []proto.DeviceInfo) {
-	res, err := r.Table("devices").OrderBy(r.Desc("present"), r.Desc("presenceChangedAt"), r.Desc("ready"), r.Desc("using")).Run(db.session)
+	res, err := r.Table("devices").OrderBy(r.Desc("present"), r.Desc("ready"), r.Desc("using"), r.Desc("presenceChangedAt")).Run(db.session)
 	if err != nil {
 		log.Error(err)
 		return nil
