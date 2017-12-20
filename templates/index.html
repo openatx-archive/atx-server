@@ -13,6 +13,7 @@
   <script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vue@2.5.3/dist/vue.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/moment@2.20.1/moment.min.js"></script>
   <style>
 
   </style>
@@ -53,16 +54,17 @@
         <thead>
           <tr>
             <th>#</th>
-            <th>IP</th>
-            <th>Serial</th>
+            <th class="hidden-xs">IP</th>
+            <th class="hidden-xs">Serial</th>
             <th>Brand</th>
             <th>Model</th>
             <th class="hidden-xs">MAC</th>
-            <th>Agent</th>
+            <th class="hidden-xs">Agent</th>
             <th>电量</th>
             <th>状态</th>
+            <th>上线时间</th>
             <th>操作</th>
-            <th>跳转</th>
+            <th class="hidden-xs">跳转</th>
             <!-- <th class="hidden-xs">Other</th> -->
           </tr>
         </thead>
@@ -71,15 +73,15 @@
             <td>
               <input type="checkbox" :disabled="!d.present" v-model="d.ready" @click="toggleReady(d)">
             </td>
-            <td><span v-text="d.ip"></span></td>
-            <td>
+            <td class="hidden-xs"><span v-text="d.ip"></span></td>
+            <td class="hidden-xs">
               <span v-text='d.serial' class="hidden-xs"></span>
               <span v-text='d.serial && d.serial.slice(4)+"..."' class="visible-xs"></span>
             </td>
             <td v-text="d.brand"></td>
             <td v-text="d.model"></td>
             <td class="hidden-xs text-uppercase"><span v-text="d.hwaddr"></span></td>
-            <td v-text="d.agentVersion"></td>
+            <td class="hidden-xs" v-text="d.agentVersion"></td>
             <td>
               {{d.battery && d.battery.level}}%
               <template v-if="d.present">
@@ -98,9 +100,12 @@
               </template>
             </td>
             <td>
-              <button title="定位" :disabled="!d.present" @click="identify(d)" class="btn btn-sm btn-default"><i class="fa fa-location-arrow" v-bind:class="{'fa-spin': d.identifying}"></i></button>
+              {{d.presenceChangedAt | timeSince}}
             </td>
             <td>
+              <button title="定位" :disabled="!d.present" @click="identify(d)" class="btn btn-sm btn-default"><i class="fa fa-location-arrow" v-bind:class="{'fa-spin': d.identifying}"></i></button>
+            </td>
+            <td class="hidden-xs">
               <a target="_blank" :href='"http://"+d.ip+":7912/remote"'><i class="fa fa-television"></i></a>
               <a target="_blank" :href='"http://"+d.ip+":7912/term"'><i class="fa fa-terminal"></i></a>
             </td>
@@ -115,6 +120,11 @@
       data: {
         devices: [],
         errmsg: "",
+      },
+      filters: {
+        timeSince: function(value) {
+          return moment(value).fromNow()
+        }
       },
       mounted: function() {
         this.loadWatches()

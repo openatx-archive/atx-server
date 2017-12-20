@@ -38,7 +38,7 @@ type DeviceInfo struct {
 	ConnectionCount   int       `json:"-"` // > 1 happended when phone redial server
 	Reserved          string    `json:"reserved,omitempty"`
 	CreatedAt         time.Time `json:"-" gorethink:"createdAt,omitempty"`
-	PresenceChangedAt time.Time `json:"-" gorethink:"presenceChangedAt,omitempty"`
+	PresenceChangedAt time.Time `json:"presenceChangedAt,omitempty"`
 
 	Ready   *bool `json:"ready,omitempty"`
 	Present *bool `json:"present,omitempty"`
