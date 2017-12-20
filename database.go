@@ -77,11 +77,18 @@ func (db *RdbUtils) TableCreateAnyway(name string) error {
 // UpdateOrInsertDevice called when device plugin
 func (db *RdbUtils) UpdateOrInsertDevice(dev proto.DeviceInfo) error {
 	dev.Present = newBool(true)
-	dev.CreatedAt = time.Now()
 	dev.PresenceChangedAt = time.Now()
+	// only update when create
+	dev.Ready = newBool(false)
+	dev.Using = newBool(false)
+	dev.CreatedAt = time.Now()
 	return r.Table("devices").Insert(dev, r.InsertOpts{
 		Conflict: func(id, oldDoc, newDoc r.Term) interface{} {
-			return oldDoc.Merge(newDoc.Without("createdAt"))
+			return oldDoc.Merge(newDoc.Without("createdAt", "ready", "using")).Merge(map[string]interface{}{
+				"createdAt": oldDoc.Field("createdAt").Default(time.Now()),
+				"ready":     oldDoc.Field("ready").Default(false),
+				"using":     oldDoc.Field("using").Default(false),
+			})
 		},
 	}).Exec(db.session)
 }
