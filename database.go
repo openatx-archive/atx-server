@@ -81,7 +81,7 @@ func (db *RdbUtils) UpdateOrInsertDevice(dev proto.DeviceInfo) error {
 }
 
 func (db *RdbUtils) DeviceList() (devices []proto.DeviceInfo) {
-	res, err := r.Table("devices").Run(db.session)
+	res, err := r.Table("devices").OrderBy(r.Desc("present"), r.Desc("ready"), r.Desc("using")).Run(db.session)
 	if err != nil {
 		log.Error(err)
 		return nil
