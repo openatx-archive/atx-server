@@ -18,7 +18,7 @@ import (
 
 const (
 	version         = "dev"
-	atxAgentVersion = "0.1.1"
+	atxAgentVersion = "0.1.2"
 )
 
 var (
