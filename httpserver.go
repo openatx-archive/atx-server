@@ -102,6 +102,7 @@ func newHandler() http.Handler {
 		tmpl := template.Must(template.New("").Delims("[[", "]]").ParseGlob("templates/*.html"))
 		tmpl.ExecuteTemplate(w, "index.html", nil)
 	})
+	r.Handle("/assets/{(.*)}", http.StripPrefix("/assets/", http.FileServer(http.Dir("./assets"))))
 	r.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "assets/favicon.ico")
 	})
