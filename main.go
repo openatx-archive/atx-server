@@ -83,11 +83,8 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	devInfo.IP = host
 	log.Debugf("client ip:%s product:%s brand:%s", devInfo.IP, devInfo.Model, devInfo.Brand)
 
-	devInfo.Present = newBool(true)
 	db.UpdateOrInsertDevice(*devInfo)
-	defer func(udid string) {
-		db.SetDeviceStatus(udid, false, false) // not present and not ready
-	}(devInfo.Udid)
+	defer db.SetDeviceAbsent(devInfo.Udid)
 
 	// ping ticker
 	go func() {

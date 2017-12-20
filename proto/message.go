@@ -2,6 +2,7 @@ package proto
 
 import (
 	"encoding/json"
+	"time"
 
 	"github.com/openatx/androidutils"
 )
@@ -34,9 +35,12 @@ type DeviceInfo struct {
 	Display      *androidutils.Display `json:"display,omitempty"`
 	Battery      *androidutils.Battery `json:"battery,omitempty"`
 
-	ConnectionCount int    `json:"-"` // > 1 happended when phone redial server
-	Reserved        string `json:"reserved,omitempty"`
-	Ready           *bool  `json:"ready,omitempty"`
-	Present         *bool  `json:"present,omitempty"`
-	Using           *bool  `json:"using,omitempty"`
+	ConnectionCount   int       `json:"-"` // > 1 happended when phone redial server
+	Reserved          string    `json:"reserved,omitempty"`
+	CreatedAt         time.Time `json:"-" gorethink:"createdAt,omitempty"`
+	PresenceChangedAt time.Time `json:"-" gorethink:"presenceChangedAt,omitempty"`
+
+	Ready   *bool `json:"ready,omitempty"`
+	Present *bool `json:"present,omitempty"`
+	Using   *bool `json:"using,omitempty"`
 }

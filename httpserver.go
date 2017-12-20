@@ -132,7 +132,7 @@ func newHandler() http.Handler {
 			return
 		}
 		info.Udid = udid
-		db.UpdateOrInsertDevice(info) // TODO: update database
+		db.DeviceUpdate(info) // TODO: update database
 		io.WriteString(w, "Success")
 	}).Methods("GET", "POST")
 

@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"strings"
+	"time"
 
 	"github.com/openatx/atx-server/proto"
 	log "github.com/sirupsen/logrus"
@@ -72,16 +74,27 @@ func (db *RdbUtils) TableCreateAnyway(name string) error {
 	return err
 }
 
+// UpdateOrInsertDevice called when device plugin
 func (db *RdbUtils) UpdateOrInsertDevice(dev proto.DeviceInfo) error {
+	dev.Present = newBool(true)
+	dev.CreatedAt = time.Now()
+	dev.PresenceChangedAt = time.Now()
 	return r.Table("devices").Insert(dev, r.InsertOpts{
 		Conflict: func(id, oldDoc, newDoc r.Term) interface{} {
-			return oldDoc.Merge(newDoc)
+			return oldDoc.Merge(newDoc.Without("createdAt"))
 		},
 	}).Exec(db.session)
 }
 
+func (db *RdbUtils) DeviceUpdate(dev proto.DeviceInfo) error {
+	if dev.Udid == "" {
+		return errors.New("DeviceInfo require udid field")
+	}
+	return r.Table("devices").Get(dev.Udid).Update(dev).Exec(db.session)
+}
+
 func (db *RdbUtils) DeviceList() (devices []proto.DeviceInfo) {
-	res, err := r.Table("devices").OrderBy(r.Desc("present"), r.Desc("ready"), r.Desc("using")).Run(db.session)
+	res, err := r.Table("devices").OrderBy(r.Desc("present"), r.Desc("presenceChangedAt"), r.Desc("ready"), r.Desc("using")).Run(db.session)
 	if err != nil {
 		log.Error(err)
 		return nil
@@ -117,11 +130,12 @@ func (db *RdbUtils) DeviceFindAll(info proto.DeviceInfo) (infos []proto.DeviceIn
 }
 
 // SetDevicePresent change present status
-func (db *RdbUtils) SetDeviceStatus(udid string, present bool, ready bool) error {
+func (db *RdbUtils) SetDeviceAbsent(udid string) error {
 	return db.UpdateOrInsertDevice(proto.DeviceInfo{
-		Udid:    udid,
-		Present: &present,
-		Ready:   &ready,
+		Udid:              udid,
+		Present:           newBool(false), // &present,
+		PresenceChangedAt: time.Now(),
+		Ready:             newBool(false),
 	})
 }
 
