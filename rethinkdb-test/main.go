@@ -68,10 +68,10 @@ func init() {
 	r.SetTags("gorethink", "json")
 	r.SetVerbose(true)
 	session, err := r.Connect(r.ConnectOpts{
-		Address:  "localhost:28015",
-		Database: "atxserver",
-		// InitialCap: 10,
-		// MaxOpen:    10,
+		Address:    "localhost:28015",
+		Database:   "atxserver",
+		InitialCap: 10,
+		MaxOpen:    10,
 	})
 
 	if err != nil {

@@ -25,11 +25,12 @@ func (m *CommonMessage) MarshalJSON() []byte {
 }
 
 type DeviceInfo struct {
-	Udid         string                `json:"udid,omitempty"`   // Unique device identifier
-	Serial       string                `json:"serial,omitempty"` // ro.serialno
-	Brand        string                `json:"brand,omitempty"`  // ro.product.brand
-	Model        string                `json:"model,omitempty"`  // ro.product.model
-	HWAddr       string                `json:"hwaddr,omitempty"` // persist.sys.wifi.mac
+	Udid         string                `json:"udid,omitempty"`       // Unique device identifier
+	PropertyId   string                `json:"propertyId,omitempty"` // For device managerment
+	Serial       string                `json:"serial,omitempty"`     // ro.serialno
+	Brand        string                `json:"brand,omitempty"`      // ro.product.brand
+	Model        string                `json:"model,omitempty"`      // ro.product.model
+	HWAddr       string                `json:"hwaddr,omitempty"`     // persist.sys.wifi.mac
 	IP           string                `json:"ip,omitempty"`
 	AgentVersion string                `json:"agentVersion,omitempty"`
 	Display      *androidutils.Display `json:"display,omitempty"`

@@ -13,6 +13,7 @@ import (
 	accesslog "github.com/mash/go-accesslog"
 	"github.com/openatx/atx-server/proto"
 	log "github.com/sirupsen/logrus"
+	"github.com/tomasen/realip"
 )
 
 var (
@@ -31,6 +32,13 @@ var (
 	// Time allowed to read the next pong message from client
 	wsPongWait = wsPingPeriod * 3
 )
+
+func renderHTML(w http.ResponseWriter, filename string, value interface{}) {
+	tmpl := template.Must(template.New("").Delims("[[", "]]").ParseGlob("templates/*.html"))
+	tmpl.ExecuteTemplate(w, filename, value)
+	// content, _ := ioutil.ReadFile("templates/" + filename)
+	// template.Must(template.New(filename).Parse(string(content))).Execute(w, nil)
+}
 
 func newHandler() http.Handler {
 	r := mux.NewRouter()
@@ -99,8 +107,7 @@ func newHandler() http.Handler {
 
 	// r.HandleFunc("/api/v1/phones/identify")
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		tmpl := template.Must(template.New("").Delims("[[", "]]").ParseGlob("templates/*.html"))
-		tmpl.ExecuteTemplate(w, "index.html", nil)
+		renderHTML(w, "index.html", nil)
 	})
 	r.Handle("/assets/{(.*)}", http.StripPrefix("/assets/", http.FileServer(http.Dir("./assets"))))
 	r.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
@@ -135,6 +142,34 @@ func newHandler() http.Handler {
 		info.Udid = udid
 		db.DeviceUpdate(info) // TODO: update database
 		io.WriteString(w, "Success")
+	}).Methods("GET", "POST")
+
+	r.HandleFunc("/property", func(w http.ResponseWriter, r *http.Request) {
+		clientIp := realip.FromRequest(r)
+		udid, err := deviceQueryToUdid("ip:" + clientIp)
+		if err != nil {
+			io.WriteString(w, "init with uiautomator2")
+			return
+		}
+		info, err := db.DeviceGet(udid)
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+		if r.Method == "POST" {
+			var id string = r.FormValue("id")
+			if id == "" && r.FormValue("id_number") != "" {
+				id = "HIH-PHO-" + r.FormValue("id_number")
+			}
+			db.DeviceUpdate(proto.DeviceInfo{
+				Udid:       info.Udid,
+				PropertyId: id,
+			})
+			info.PropertyId = id
+			io.WriteString(w, "<h1>Updated to "+id+"</h1>")
+			return
+		}
+		renderHTML(w, "property.html", info.PropertyId)
 	}).Methods("GET", "POST")
 
 	// TODO

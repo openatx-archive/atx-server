@@ -58,6 +58,7 @@
             <th>#</th>
             <th class="hidden-xs">IP</th>
             <th class="hidden-xs">Serial</th>
+            <th class="hidden-xs">资产编号</th>
             <th>Brand</th>
             <th>Model</th>
             <th class="hidden-xs">MAC</th>
@@ -80,6 +81,7 @@
               <span v-text='d.serial' class="hidden-xs"></span>
               <span v-text='d.serial && d.serial.slice(4)+"..."' class="visible-xs"></span>
             </td>
+            <td class="hidden-xs">{{d.propertyId}}</td>
             <td v-text="d.brand"></td>
             <td v-text="d.model"></td>
             <td class="hidden-xs text-uppercase"><span v-text="d.hwaddr"></span></td>
