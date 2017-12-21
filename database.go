@@ -138,7 +138,8 @@ func (db *RdbUtils) DeviceFindAll(info proto.DeviceInfo) (infos []proto.DeviceIn
 
 // SetDevicePresent change present status
 func (db *RdbUtils) SetDeviceAbsent(udid string) error {
-	return db.UpdateOrInsertDevice(proto.DeviceInfo{
+	log.Debugf("device absent: %s", udid)
+	return db.DeviceUpdate(proto.DeviceInfo{
 		Udid:              udid,
 		Present:           newBool(false), // &present,
 		PresenceChangedAt: time.Now(),

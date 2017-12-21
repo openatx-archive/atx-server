@@ -11,6 +11,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/codeskyblue/inforus"
+
 	"github.com/gorilla/websocket"
 	"github.com/openatx/atx-server/proto"
 	log "github.com/sirupsen/logrus"
@@ -147,6 +149,7 @@ func main() {
 	// log.SetFlags(log.Lshortfile | log.LstdFlags)
 	log.SetLevel(log.DebugLevel)
 	log.SetFormatter(&log.TextFormatter{})
+	inforus.AddHookDefault()
 
 	initDB(*rdbAddr, *rdbName)
 	log.Fatal(http.ListenAndServe(*addr, newHandler()))

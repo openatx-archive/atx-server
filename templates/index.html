@@ -33,9 +33,11 @@
     </div>
     <form class="form-inline">
       <div class="form-group">
-        <button @click.prevent="batchUnlock" class="btn btn-sm btn-default"><i class="fa fa-unlock"></i> 全部解锁</button>
-        <button @click.prevent="batchLock" class="btn btn-sm btn-default"><i class="fa fa-lock"></i> 全部锁屏</button>
-        <button @click.prevent="batchIdentify" class="btn btn-sm btn-default"><i class="fa fa-location-arrow"></i> 全部定位</button>
+        <strong>批量操作</strong>
+        <button @click.prevent="batchUnlock" class="btn btn-sm btn-default"><i class="fa fa-unlock"></i> 解锁</button>
+        <button @click.prevent="batchLock" class="btn btn-sm btn-default"><i class="fa fa-lock"></i> 锁屏</button>
+        <button @click.prevent="batchIdentify('red')" class="btn btn-sm btn-default"><i class="fa fa-location-arrow"></i> 红色</button>
+        <button @click.prevent="batchIdentify('black')" class="btn btn-sm btn-default"><i class="fa fa-location-arrow"></i> 黑色</button>
       </div>
       <div class="form-group">
         <!-- <label>Search</label> -->
@@ -44,7 +46,7 @@
           <div class="input-group-addon"><i class="fa fa-search"></i></div>
           <input type="text" class="form-control">
           <div class="input-group-addon">
-            <strong v-text="devices.length"></strong>
+            <strong v-text="onlineCount"></strong>
           </div>
         </div>
       </div>
@@ -129,6 +131,13 @@
       mounted: function() {
         this.loadWatches()
       },
+      computed: {
+        onlineCount: function() {
+          return this.devices.filter(function(d) {
+            return d.present
+          }).length;
+        }
+      },
       methods: {
         loadWatches: function() {
           // init data
@@ -205,12 +214,12 @@
             })
           })
         },
-        batchIdentify: function() {
+        batchIdentify: function(theme) {
           $.ajax({
             url: "/api/v1/batch/shell",
             method: "post",
             data: {
-              command: "input keyevent HOME && am start -W -a com.github.uiautomator.ACTION_IDENTIFY -e theme red"
+              command: "input keyevent HOME && am start -W -a com.github.uiautomator.ACTION_IDENTIFY -e theme " + theme,
             }
           })
         },
