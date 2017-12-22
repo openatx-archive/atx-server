@@ -32,8 +32,12 @@ func initDB(address, dbName string) {
 	db = &RdbUtils{session}
 
 	// initial state
-	db.DBCreateAnyway(dbName)
-	db.TableCreateAnyway("devices")
+	if err := db.DBCreateAnyway(dbName); err != nil {
+		panic(err)
+	}
+	if err := db.TableCreateAnyway("devices"); err != nil {
+		panic(err)
+	}
 	r.Table("devices").Update(map[string]bool{
 		"present": false,
 	}).Exec(session)
@@ -54,13 +58,13 @@ func (db *RdbUtils) DBCreateAnyway(name string) error {
 		return err
 	}
 	for _, dbName := range dbNames {
-		log.Println(dbName)
+		log.Println("found db:", dbName)
 		if dbName == name {
 			log.Println("db exists atxserver")
 			return nil
 		}
 	}
-	err = r.DBCreate("atxserver").Exec(db.session)
+	err = r.DBCreate(name).Exec(db.session)
 	return err
 }
 

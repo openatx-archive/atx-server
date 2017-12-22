@@ -75,6 +75,8 @@
             <th>资产编号</th>
             <th>Brand</th>
             <th>Model</th>
+            <th class="hidden-xs">Version(SDK)</th>
+            <th class="hidden-xs hidden-sm">CPU</th>
             <th class="hidden-xs">MAC</th>
             <th class="hidden-xs">Agent</th>
             <th>电量</th>
@@ -95,14 +97,16 @@
               <span v-text='d.serial' class="hidden-xs"></span>
               <span v-text='d.serial && d.serial.slice(4)+"..."' class="visible-xs"></span>
             </td>
-            <td>{{d.propertyId}}</td>
+            <td v-text="d.propertyId"></td>
             <td v-text="d.brand"></td>
             <td v-text="d.model"></td>
+            <td class="hidden-xs">{{d.version}}({{d.sdk}})</td>
+            <td class="hidden-xs hidden-sm"><span v-if="d.cpu">{{d.cpu.hardware}}</span></td>
             <td class="hidden-xs text-uppercase"><span v-text="d.hwaddr"></span></td>
             <td class="hidden-xs" v-text="d.agentVersion"></td>
             <td>
               {{d.battery && d.battery.level}}%
-              <template v-if="d.present">
+              <template v-if="d.present && d.battery">
                 <span class="hidden-xs fa fa-bolt color-yellow" v-show="d.battery.status == 2"></span>
                 <span class="hidden-xs fa-fix-height fa" :class='"fa-battery-" + Math.ceil(d.battery.level/25)'></span>
               </template>
