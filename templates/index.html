@@ -45,8 +45,21 @@
           <!-- <div class="input-group-addon">Search</div> -->
           <div class="input-group-addon"><i class="fa fa-search"></i></div>
           <input type="text" class="form-control">
-          <div class="input-group-addon">
+          <div class="input-group-addon" title="设备在线">
+            <i class="fa fa-meh-o"></i>
             <strong v-text="onlineCount"></strong>
+          </div>
+          <div class="input-group-addon" title="可以使用">
+            <i class="fa fa-smile-o"></i>
+            <strong v-text="count(true, true, null)"></strong>
+          </div>
+          <div class="input-group-addon" title="在线但不能使用">
+            <i class="fa fa-frown-o"></i>
+            <strong v-text="count(true, false, null)"></strong>
+          </div>
+          <div class="input-group-addon" title="离线设备">
+            <i class="fa fa-snowflake-o"></i>
+            <strong v-text="count(false, null, null)"></strong>
           </div>
         </div>
       </div>
@@ -141,6 +154,20 @@
         }
       },
       methods: {
+        count: function(present, ready, using) {
+          return this.devices.filter(function(d) {
+            if (present != null && d.present != present) {
+              return false;
+            }
+            if (ready != null && d.ready != ready) {
+              return false;
+            }
+            if (using != null && d.using != using) {
+              return false;
+            }
+            return true;
+          }).length
+        },
         loadWatches: function() {
           // init data
           this.loadDevices()
@@ -221,7 +248,7 @@
             url: "/api/v1/batch/shell",
             method: "post",
             data: {
-              command: "input keyevent HOME && am start -W -a com.github.uiautomator.ACTION_IDENTIFY -e theme " + theme,
+              command: "input keyevent BACK && am start -W -a com.github.uiautomator.ACTION_IDENTIFY -e theme " + theme,
             }
           })
         },

@@ -133,8 +133,12 @@ func runAndroidShell(ip string, command string) (output string, err error) {
 
 func batchRunCommand(command string) {
 	wg := sync.WaitGroup{}
-	// failCount := 0
+
 	for _, devInfo := range db.DeviceList() {
+		if devInfo.Present == nil || !*devInfo.Present {
+			continue
+		}
+
 		wg.Add(1)
 		go func(ip string) {
 			runAndroidShell(ip, command)
