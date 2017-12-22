@@ -72,7 +72,7 @@
             <th>#</th>
             <th class="hidden-xs">IP</th>
             <th class="hidden-xs">Serial</th>
-            <th class="hidden-xs">资产编号</th>
+            <th>资产编号</th>
             <th>Brand</th>
             <th>Model</th>
             <th class="hidden-xs">MAC</th>
@@ -95,7 +95,7 @@
               <span v-text='d.serial' class="hidden-xs"></span>
               <span v-text='d.serial && d.serial.slice(4)+"..."' class="visible-xs"></span>
             </td>
-            <td class="hidden-xs">{{d.propertyId}}</td>
+            <td>{{d.propertyId}}</td>
             <td v-text="d.brand"></td>
             <td v-text="d.model"></td>
             <td class="hidden-xs text-uppercase"><span v-text="d.hwaddr"></span></td>
@@ -103,8 +103,8 @@
             <td>
               {{d.battery && d.battery.level}}%
               <template v-if="d.present">
-                <span class="fa fa-bolt color-yellow" v-show="d.battery.status == 2"></span>
-                <span class="fa-fix-height fa" :class='"fa-battery-" + Math.ceil(d.battery.level/25)'></span>
+                <span class="hidden-xs fa fa-bolt color-yellow" v-show="d.battery.status == 2"></span>
+                <span class="hidden-xs fa-fix-height fa" :class='"fa-battery-" + Math.ceil(d.battery.level/25)'></span>
               </template>
             </td>
             <td>
