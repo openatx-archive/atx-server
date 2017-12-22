@@ -38,6 +38,7 @@
         <button @click.prevent="batchLock" class="btn btn-sm btn-default"><i class="fa fa-lock"></i> 锁屏</button>
         <button @click.prevent="batchIdentify('red')" class="btn btn-sm btn-default"><i class="fa fa-location-arrow"></i> 红色</button>
         <button @click.prevent="batchIdentify('black')" class="btn btn-sm btn-default"><i class="fa fa-location-arrow"></i> 黑色</button>
+        <button @click.prevent="setProperty" class="btn btn-sm btn-info">资产设置</button>
       </div>
       <div class="form-group">
         <!-- <label>Search</label> -->
@@ -262,6 +263,15 @@
           $.ajax({
             url: "/api/v1/batch/unlock",
             method: "post",
+          })
+        },
+        setProperty: function() {
+          $.ajax({
+            url: "/api/v1/batch/shell",
+            method: "post",
+            data: {
+              command: "am start -a android.intent.action.VIEW -d http://" + location.host + "/property",
+            }
           })
         }
       }
