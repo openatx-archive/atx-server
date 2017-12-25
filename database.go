@@ -16,6 +16,11 @@ var (
 	db *RdbUtils
 )
 
+type Product struct {
+	Brand string `gorethink:"id[0]"`
+	Model string `gorethink:"id[1]"`
+}
+
 func initDB(address, dbName string) {
 	r.SetTags("gorethink", "json")
 	r.SetVerbose(true)
@@ -35,9 +40,15 @@ func initDB(address, dbName string) {
 	if err := db.DBCreateAnyway(dbName); err != nil {
 		panic(err)
 	}
-	if err := db.TableCreateAnyway("devices"); err != nil {
+	if err := db.TableCreateAnyway("devices", r.TableCreateOpts{
+		PrimaryKey: "udid",
+	}); err != nil {
 		panic(err)
 	}
+	if err := db.TableCreateAnyway("products"); err != nil {
+		panic(err)
+	}
+
 	r.Table("devices").Update(map[string]bool{
 		"present": false,
 	}).Exec(session)
@@ -68,10 +79,8 @@ func (db *RdbUtils) DBCreateAnyway(name string) error {
 	return err
 }
 
-func (db *RdbUtils) TableCreateAnyway(name string) error {
-	err := r.TableCreate(name, r.TableCreateOpts{
-		PrimaryKey: "udid",
-	}).Exec(db.session)
+func (db *RdbUtils) TableCreateAnyway(name string, optArgs ...r.TableCreateOpts) error {
+	err := r.TableCreate(name, optArgs...).Exec(db.session)
 	if err != nil && strings.Contains(err.Error(), "already exists") {
 		return nil
 	}

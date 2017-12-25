@@ -198,7 +198,7 @@ func newHandler() http.Handler {
 				http.Error(w, "Device is using", http.StatusForbidden)
 				return
 			}
-			db.UpdateOrInsertDevice(proto.DeviceInfo{
+			db.DeviceUpdate(proto.DeviceInfo{
 				Udid:  info.Udid,
 				Using: newBool(true),
 			})
@@ -206,7 +206,7 @@ func newHandler() http.Handler {
 			return
 		}
 		// DELETE
-		db.UpdateOrInsertDevice(proto.DeviceInfo{
+		db.DeviceUpdate(proto.DeviceInfo{
 			Udid:  udid,
 			Using: newBool(false),
 		})
