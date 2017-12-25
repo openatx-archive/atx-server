@@ -57,4 +57,13 @@ type DeviceInfo struct {
 	Ready   *bool `json:"ready,omitempty"`
 	Present *bool `json:"present,omitempty"`
 	Using   *bool `json:"using,omitempty"`
+
+	Product Product `gorethink:"product_id,reference" gorethink_ref:"id"`
+}
+
+type Product struct {
+	Brand    string  `json:"brand" gorethink:"id[0]"`
+	Model    string  `json:"model" gorethink:"id[1]"`
+	Name     string  `json:"name" gorethink:"name,omitempty"`
+	Coverage float32 `json:"coverage" gorethink:"coverage,omitempty"`
 }
