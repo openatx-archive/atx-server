@@ -145,7 +145,12 @@ func (db *RdbUtils) DeviceGet(udid string) (info proto.DeviceInfo, err error) {
 func (db *RdbUtils) DeviceFindAll(info proto.DeviceInfo) (infos []proto.DeviceInfo) {
 	infojson, _ := json.Marshal(info)
 	log.Debugf("query %s", string(infojson))
-	res, err := r.Table("devices").Filter(info).Run(db.session)
+	res, err := r.Table("devices").Filter(info).
+		Merge(func(p r.Term) interface{} {
+			return map[string]interface{}{
+				"product_id": r.Table("products").Get(p.Field("product_id").Default(0)),
+			}
+		}).Run(db.session)
 	if err != nil {
 		log.Error(err)
 		return nil
