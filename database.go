@@ -115,7 +115,7 @@ func (db *RdbUtils) DeviceList() (devices []proto.DeviceInfo) {
 		OrderBy(r.Desc("present"), r.Desc("ready"), r.Desc("using"), r.Desc("presenceChangedAt")).
 		Merge(func(p r.Term) interface{} {
 			return map[string]interface{}{
-				"product_id": r.Table("products").Get(p.Field("product_id")),
+				"product_id": r.Table("products").Get(p.Field("product_id").Default(0)),
 			}
 		}).Run(db.session)
 	if err != nil {
@@ -131,7 +131,7 @@ func (db *RdbUtils) DeviceGet(udid string) (info proto.DeviceInfo, err error) {
 	res, err := r.Table("devices").Get(udid).
 		Merge(func(p r.Term) interface{} {
 			return map[string]interface{}{
-				"product_id": r.Table("products").Get(p.Field("product_id")),
+				"product_id": r.Table("products").Get(p.Field("product_id").Default(0)),
 			}
 		}).Run(db.session)
 	if err != nil {
