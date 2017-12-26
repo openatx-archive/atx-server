@@ -85,7 +85,7 @@ func newHandler() http.Handler {
 		}
 		err = db.DeviceUpdate(proto.DeviceInfo{
 			Udid: mux.Vars(r)["udid"],
-			Product: proto.Product{
+			Product: &proto.Product{
 				Id: product.Id,
 			},
 		})

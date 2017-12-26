@@ -58,7 +58,7 @@ type DeviceInfo struct {
 	Present *bool `json:"present,omitempty"`
 	Using   *bool `json:"using,omitempty"`
 
-	Product Product `json:"product" gorethink:"product_id,reference,omitempty" gorethink_ref:"id"`
+	Product *Product `json:"product" gorethink:"product_id,reference,omitempty" gorethink_ref:"id"`
 }
 
 type Product struct {

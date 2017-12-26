@@ -100,7 +100,7 @@
             </td>
             <td v-text="d.propertyId"></td>
             <td>
-              <span v-text="d.product.name"></span>
+              <span v-text="(d.product || {}).name"></span>
               <a :href="'/devices/'+d.udid+'/edit'" class="fa fa-edit"></a>
             </td>
             <td v-text="d.brand"></td>
