@@ -200,6 +200,7 @@
               this.devices = this.devices.map(function(device) {
                 if (device.udid == dataNew.udid) {
                   dataNew.identifying = false;
+                  dataNew.product = device.product;
                   return dataNew;
                 }
                 return device;
