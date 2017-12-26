@@ -49,6 +49,56 @@ func newHandler() http.Handler {
 			"atx-agent": atxAgentVersion,
 		})
 	})
+
+	// 设备信息修改
+	r.HandleFunc("/devices/{udid}/edit", func(w http.ResponseWriter, r *http.Request) {
+		udid := mux.Vars(r)["udid"]
+		renderHTML(w, "edit.html", udid)
+	}).Methods("GET")
+
+	r.HandleFunc("/products/{brand}/{model}", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		brand, model := vars["brand"], vars["model"]
+		products, err := db.ProductsFindAll(brand, model)
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		json.NewEncoder(w).Encode(products)
+	})
+
+	r.HandleFunc("/devices/{udid}/product", func(w http.ResponseWriter, r *http.Request) {
+		var product proto.Product
+		err := json.NewDecoder(r.Body).Decode(&product)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusForbidden)
+			return
+		}
+		if product.Id == "" {
+			http.Error(w, "product id is required", http.StatusForbidden)
+			return
+		}
+		if err := db.ProductUpdate(product.Id, product); err != nil {
+			http.Error(w, err.Error(), http.StatusForbidden)
+			return
+		}
+		err = db.DeviceUpdate(proto.DeviceInfo{
+			Udid: mux.Vars(r)["udid"],
+			Product: proto.Product{
+				Id: product.Id,
+			},
+		})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusForbidden)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": true,
+		})
+	}).Methods("PUT")
+
 	r.HandleFunc("/echo", echo)
 
 	r.HandleFunc("/feeds", func(w http.ResponseWriter, r *http.Request) {

@@ -90,7 +90,7 @@ func (db *RdbUtils) UpdateOrInsertDevice(dev proto.DeviceInfo) error {
 	dev.Ready = newBool(false)
 	dev.Using = newBool(false)
 	dev.CreatedAt = time.Now()
-	return r.Table("devices").Insert(dev, r.InsertOpts{
+	_, err := r.Table("devices").Insert(dev, r.InsertOpts{
 		Conflict: func(id, oldDoc, newDoc r.Term) interface{} {
 			return oldDoc.Merge(newDoc.Without("createdAt", "ready", "using")).Merge(map[string]interface{}{
 				"createdAt": oldDoc.Field("createdAt").Default(time.Now()),
@@ -98,18 +98,26 @@ func (db *RdbUtils) UpdateOrInsertDevice(dev proto.DeviceInfo) error {
 				"using":     oldDoc.Field("using").Default(false),
 			})
 		},
-	}).Exec(db.session)
+	}).RunWrite(db.session)
+	return err
 }
 
 func (db *RdbUtils) DeviceUpdate(dev proto.DeviceInfo) error {
 	if dev.Udid == "" {
 		return errors.New("DeviceInfo require udid field")
 	}
-	return r.Table("devices").Get(dev.Udid).Update(dev).Exec(db.session)
+	_, err := r.Table("devices").Get(dev.Udid).Update(dev).RunWrite(db.session)
+	return err
 }
 
 func (db *RdbUtils) DeviceList() (devices []proto.DeviceInfo) {
-	res, err := r.Table("devices").OrderBy(r.Desc("present"), r.Desc("ready"), r.Desc("using"), r.Desc("presenceChangedAt")).Run(db.session)
+	res, err := r.Table("devices").
+		OrderBy(r.Desc("present"), r.Desc("ready"), r.Desc("using"), r.Desc("presenceChangedAt")).
+		Merge(func(p r.Term) interface{} {
+			return map[string]interface{}{
+				"product_id": r.Table("products").Get(p.Field("product_id")),
+			}
+		}).Run(db.session)
 	if err != nil {
 		log.Error(err)
 		return nil
@@ -120,7 +128,12 @@ func (db *RdbUtils) DeviceList() (devices []proto.DeviceInfo) {
 }
 
 func (db *RdbUtils) DeviceGet(udid string) (info proto.DeviceInfo, err error) {
-	res, err := r.Table("devices").Get(udid).Run(db.session)
+	res, err := r.Table("devices").Get(udid).
+		Merge(func(p r.Term) interface{} {
+			return map[string]interface{}{
+				"product_id": r.Table("products").Get(p.Field("product_id")),
+			}
+		}).Run(db.session)
 	if err != nil {
 		return
 	}
@@ -172,4 +185,31 @@ func (db *RdbUtils) WatchDeviceChanges() (feeds chan r.ChangeResponse, cancel fu
 		close(feeds)
 	}()
 	return
+}
+
+func (db *RdbUtils) ProductsFindAll(brand, model string) (products []proto.Product, err error) {
+	res, err := r.Table("products").Filter(proto.Product{Brand: brand, Model: model}).Run(db.session)
+	if err != nil {
+		return
+	}
+	if err = res.All(&products); err != nil {
+		return
+	}
+	if len(products) > 0 {
+		return
+	}
+	resp, err := r.Table("products").Insert(proto.Product{Brand: brand, Model: model}).RunWrite(db.session)
+	if err != nil {
+		return
+	}
+	if len(resp.GeneratedKeys) != 1 {
+		panic("generatedKeys must be one")
+	}
+	return db.ProductsFindAll(brand, model)
+}
+
+func (db *RdbUtils) ProductUpdate(id string, product proto.Product) error {
+	product.Id = ""
+	_, err := r.Table("products").Get(id).Update(product).RunWrite(db.session)
+	return err
 }

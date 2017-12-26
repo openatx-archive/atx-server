@@ -73,6 +73,7 @@
             <th class="hidden-xs">IP</th>
             <th class="hidden-xs">Serial</th>
             <th>资产编号</th>
+            <th>名字</th>
             <th>Brand</th>
             <th>Model</th>
             <th class="hidden-xs">Version(SDK)</th>
@@ -98,6 +99,10 @@
               <span v-text='d.serial && d.serial.slice(4)+"..."' class="visible-xs"></span>
             </td>
             <td v-text="d.propertyId"></td>
+            <td>
+              <span v-text="d.product.name"></span>
+              <a :href="'/devices/'+d.udid+'/edit'" class="fa fa-edit"></a>
+            </td>
             <td v-text="d.brand"></td>
             <td v-text="d.model"></td>
             <td class="hidden-xs">{{d.version}}({{d.sdk}})</td>

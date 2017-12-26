@@ -35,7 +35,7 @@ type MemoryInfo struct {
 
 type DeviceInfo struct {
 	Udid         string                `json:"udid,omitempty"`       // Unique device identifier
-	PropertyId   string                `json:"propertyId,omitempty"` // For device managerment
+	PropertyId   string                `json:"propertyId,omitempty"` // For device managerment, eg: HIH-PHO-1122
 	Version      string                `json:"version,omitempty"`    // ro.build.version.release
 	Serial       string                `json:"serial,omitempty"`     // ro.serialno
 	Brand        string                `json:"brand,omitempty"`      // ro.product.brand
@@ -58,12 +58,17 @@ type DeviceInfo struct {
 	Present *bool `json:"present,omitempty"`
 	Using   *bool `json:"using,omitempty"`
 
-	Product Product `gorethink:"product_id,reference" gorethink_ref:"id"`
+	Product Product `json:"product" gorethink:"product_id,reference,omitempty" gorethink_ref:"id"`
 }
 
 type Product struct {
-	Brand    string  `json:"brand" gorethink:"id[0]"`
-	Model    string  `json:"model" gorethink:"id[1]"`
+	Id       string  `json:"id" gorethink:"id,omitempty"`
+	Brand    string  `json:"brand" gorethink:"brand,omitempty"`
+	Model    string  `json:"model" gorethink:"model,omitempty"`
 	Name     string  `json:"name" gorethink:"name,omitempty"`
 	Coverage float32 `json:"coverage" gorethink:"coverage,omitempty"`
+	Gpu      string  `json:"gpu,omitempty"`
+	Cpu      string  `json:"cpu,omitempty"`
+	// AntutuScore int     `json:"antutuScore,omitempty"`
+	// Alias: 高配 or 低配
 }
