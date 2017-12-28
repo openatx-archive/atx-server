@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"flag"
+	"fmt"
 	"io/ioutil"
+	"math"
 	"net"
 	"net/http"
 	"net/url"
@@ -85,6 +87,10 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	devInfo.IP = host
 	log.Debugf("client ip:%s product:%s brand:%s", devInfo.IP, devInfo.Model, devInfo.Brand)
 
+	if devInfo.Memory != nil {
+		around := int(math.Ceil(float64(devInfo.Memory.Total-512*1024) / 1024.0 / 1024.0)) // around
+		devInfo.Memory.Around = fmt.Sprintf("%d GB", around)
+	}
 	db.UpdateOrInsertDevice(*devInfo)
 	defer db.SetDeviceAbsent(devInfo.Udid)
 

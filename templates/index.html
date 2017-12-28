@@ -78,7 +78,8 @@
             <th>Model</th>
             <th class="hidden-xs">Version(SDK)</th>
             <th class="hidden-xs hidden-sm">CPU</th>
-            <th class="hidden-xs">MAC</th>
+            <th class="hidden">MAC</th>
+            <th class="hidden-xs">Memory</th>
             <th class="hidden-xs">Agent</th>
             <th>电量</th>
             <th>状态</th>
@@ -107,7 +108,8 @@
             <td v-text="d.model"></td>
             <td class="hidden-xs">{{d.version}}({{d.sdk}})</td>
             <td class="hidden-xs hidden-sm"><span v-if="d.cpu">{{d.cpu.hardware.replace('Qualcomm Technologies, Inc', '骁龙')}}</span></td>
-            <td class="hidden-xs text-uppercase"><span v-text="d.hwaddr"></span></td>
+            <td class="hidden text-uppercase"><span v-text="d.hwaddr"></span></td>
+            <td class="hidden-xs">{{d.memory && d.memory.around}}</td>
             <td class="hidden-xs" v-text="d.agentVersion"></td>
             <td>
               {{d.battery && d.battery.level}}%

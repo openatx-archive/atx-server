@@ -30,7 +30,8 @@ type CpuInfo struct {
 }
 
 type MemoryInfo struct {
-	Total int `json:"total"` // unit kB
+	Total  int    `json:"total"` // unit kB
+	Around string `json:"around,omitempty"`
 }
 
 type DeviceInfo struct {
