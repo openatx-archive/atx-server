@@ -17,8 +17,18 @@
       <a href="/"><i class="fa fa-arrow-left"></i></a> 手机信息修改</h1>
     <div>
       <p>UDID: {{udid}}</p>
-      <p>Serial: {{device.serial}}</p>
-      <p>CPU: {{device.cpu && device.cpu.hardware}}</p>
+      <dl>
+        <dt>Serial</dt>
+        <dd>{{device.serial}}</dd>
+        <dt>Brand</dt>
+        <dd>{{device.brand}}</dd>
+        <dt>Model</dt>
+        <dd>{{device.model}}</dd>
+        <dt>CPU</dt>
+        <dd>{{device.cpu && device.cpu.hardware}}</dd>
+        <dt>Memory</dt>
+        <dd>{{device.memory && device.memory.around}}</dd>
+      </dl>
       <h4>Product</h4>
       <p>
         <select v-model="product_id" @change="productChange(product_id)">
@@ -31,6 +41,7 @@
       <p>Name: <input type="text" v-model.trim="product.name"></p>
       <p>CPU: <input type="text" v-model.trim="product.cpu"></p>
       <p>GPU: <input type="text" v-model.trim="product.gpu"></p>
+      <p>Link: <input type="text" v-model.trim="product.link"></p>
       <p>Coverage: <input type="number" v-model.number="product.coverage">%</p>
       <button class="btn btn-default" @click.prevent="update">更新</button>
       <button class="btn btn-default" @click.prevent="updateAndBack">更新并返回首页</button> {{message}}
@@ -43,7 +54,7 @@
     new Vue({
       el: "#app",
       data: {
-        udid: "ASFFDD",
+        udid: "",
         device: {},
         product: {
           id: "1242o3iryodjifasdf",
@@ -64,7 +75,6 @@
             this.product = ret.product || {};
             this.product_id = this.product.id;
             return ret;
-            //   ret.brand
           }.bind(this))
           .then(function(ret) {
             return $.ajax({
@@ -76,6 +86,10 @@
             this.products = ret;
           }.bind(this))
           .then(function(ret) {
+            if (!this.product_id && this.products.length == 1) {
+              this.product = this.products[0];
+              this.product_id = this.product.id;
+            }
             if (!this.product.cpu && this.device.cpu) {
               this.product.cpu = this.device.cpu.hardware;
             }

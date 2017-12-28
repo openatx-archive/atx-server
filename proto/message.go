@@ -62,14 +62,17 @@ type DeviceInfo struct {
 	Product *Product `json:"product,omitempty" gorethink:"product_id,reference,omitempty" gorethink_ref:"id"`
 }
 
+// "Brand Model Memory CPU" together can define a phone
 type Product struct {
-	Id       string  `json:"id" gorethink:"id,omitempty"`
-	Brand    string  `json:"brand" gorethink:"brand,omitempty"`
-	Model    string  `json:"model" gorethink:"model,omitempty"`
-	Name     string  `json:"name" gorethink:"name,omitempty"`
+	Id     string `json:"id" gorethink:"id,omitempty"`
+	Name   string `json:"name" gorethink:"name,omitempty"`
+	Brand  string `json:"brand" gorethink:"brand,omitempty"`
+	Model  string `json:"model" gorethink:"model,omitempty"`
+	Memory string `json:"memory,omitempty"` // eg: 4GB
+	Cpu    string `json:"cpu,omitempty"`
+
 	Coverage float32 `json:"coverage" gorethink:"coverage,omitempty"`
 	Gpu      string  `json:"gpu,omitempty"`
-	Cpu      string  `json:"cpu,omitempty"`
+	Link     string  `json:"link,omitempty"` // Outside link
 	// AntutuScore int     `json:"antutuScore,omitempty"`
-	// Alias: 高配 or 低配
 }
