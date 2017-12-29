@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>DRC</title>
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/bootstrap/3.3.7/css/bootstrap.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/bootstrap.select/1.12.2/css/bootstrap-select.min.css">
+  <link rel="stylesheet" href="/assets/remote.css">
+  <!-- jstree -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jstree@3.3.4/dist/themes/default/style.min.css">
+</head>
+
+<body>
+  <div id="app">
+    <nav class="navbar navbar-default" style="margin-bottom: 0px">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="#"><b>ATX</b>-<strong>Server</strong></a>
+      </div>
+      <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+        <p class="navbar-text">{{device.ip}}</p>
+      </div>
+    </nav>
+    <div id="upper">
+      <div id="left">
+        <div>
+        </div>
+        <section id="screen">
+          <canvas id="fgCanvas" class="canvas-fg" v-bind:style="canvasStyle"></canvas>
+          <canvas id="bgCanvas" class="canvas-bg" v-bind:style="canvasStyle"></canvas>
+          <span class="finger finger-0" style="transform: translate3d(200px, 100px, 0px)"></span>
+          <!-- <img style="z-index: 10" v-if="loading" src="/assets/loading.svg"> -->
+        </section>
+        <section id="footer">
+          <button class="btn" @click="keyevent('home')"><i class="fa fa-home"></i> Home</button>
+          <button class="btn" @click="keyevent('back')"><i class="fa fa-chevron-left"></i> Back</button>
+          <button class="btn" @click="keyevent('menu')"><i class="glyphicon glyphicon-menu-hamburger"></i> Menu</button>
+        </section>
+      </div>
+      <div id="vertical-gap1" class="handle vertical-gap"></div>
+      <div id="right">
+        Right part
+        <div class="hidden">
+          <button class="btn btn-xs" @click="hold(40)">原地跳</button>
+          <button class="btn btn-xs" @click="hold(400)">紧挨着</button>
+          <button class="btn btn-sm btn-default" @click="hold(510)">间隔半个</button>
+          <button class="btn btn-md btn-default" @click="hold(550)">间隔0.75</button>
+          <button class="btn btn-default" @click="hold(750)">间隔一个</button>
+          <button class="btn btn-lg" @click="hold(850)">间隔两个</button>
+          <button class="btn btn-lg" @click="hold(900)">超远</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- alert and dialogs -->
+    <div class="modal" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+            <h4 class="modal-title"><span class="color-red"><i class="fa fa-warning"></i> Error</span></h4>
+          </div>
+          <div class="modal-body">
+            <pre v-html="error"></pre>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+<script src="//cdn.jsdelivr.net/g/vue@2.1.10,jquery@3.1.1"></script>
+<script src="//cdn.jsdelivr.net/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script src="//cdn.jsdelivr.net/bootstrap.select/1.12.2/js/bootstrap-select.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/jstree@3.3.4/dist/jstree.min.js"></script>
+<script src="/assets/common.js"></script>
+<script src="/assets/remote.js"></script>
+
+</html>
