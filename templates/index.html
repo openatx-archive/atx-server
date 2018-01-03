@@ -75,17 +75,17 @@
             <th>资产编号</th>
             <th>名字</th>
             <th>Brand</th>
-            <th>Model</th>
-            <th class="hidden-xs">Version(SDK)</th>
-            <th class="hidden-xs hidden-sm">CPU</th>
+            <th class="hidden">Model</th>
+            <th class="hidden">Version(SDK)</th>
+            <th class="hidden">CPU</th>
             <th class="hidden">MAC</th>
-            <th class="hidden-xs">Memory</th>
+            <th class="hidden">Memory</th>
             <th class="hidden-xs">Agent</th>
             <th>电量</th>
             <th>状态</th>
             <th>上线时间</th>
             <th>操作</th>
-            <th class="hidden-xs">跳转</th>
+            <th class="hidden-xs">更多</th>
             <!-- <th class="hidden-xs">Other</th> -->
           </tr>
         </thead>
@@ -96,8 +96,8 @@
             </td>
             <td class="hidden-xs"><span v-text="d.ip"></span></td>
             <td class="hidden-xs">
-              <span v-text='d.serial' class="hidden-xs"></span>
-              <span v-text='d.serial && d.serial.slice(4)+"..."' class="visible-xs"></span>
+              {{d.serial | shortString(10)}}
+              <!-- <span v-text='d.serial && d.serial.slice(4)+"..."' class="visible-xs"></span> -->
             </td>
             <td v-text="d.propertyId"></td>
             <td>
@@ -105,11 +105,11 @@
               <a :href="'/devices/'+d.udid+'/edit'" class="fa fa-edit"></a>
             </td>
             <td v-text="d.brand"></td>
-            <td v-text="d.model"></td>
-            <td class="hidden-xs">{{d.version}}({{d.sdk}})</td>
-            <td class="hidden-xs hidden-sm"><span v-if="d.cpu">{{d.cpu.hardware.replace('Qualcomm Technologies, Inc', '骁龙')}}</span></td>
+            <td class="hidden" v-text="d.model"></td>
+            <td class="hidden">{{d.version}}({{d.sdk}})</td>
+            <td class="hidden"><span v-if="d.cpu">{{d.cpu.hardware.replace('Qualcomm Technologies, Inc', '骁龙')}}</span></td>
             <td class="hidden text-uppercase"><span v-text="d.hwaddr"></span></td>
-            <td class="hidden-xs">{{d.memory && d.memory.around}}</td>
+            <td class="hidden">{{d.memory && d.memory.around}}</td>
             <td class="hidden-xs" v-text="d.agentVersion"></td>
             <td>
               {{d.battery && d.battery.level}}%
@@ -153,6 +153,15 @@
       filters: {
         timeSince: function(value) {
           return moment(value).fromNow()
+        },
+        shortString: function(value, length) {
+          length = parseInt(length || "10", 10);
+          if (!value || value.length < length) {
+            return value;
+          }
+          var preLen = Math.max(1, Math.floor(length / 2 - 2));
+          var postLen = length - preLen - 2;
+          return value.substr(0, preLen) + '..' + value.substr(-postLen);
         }
       },
       mounted: function() {
