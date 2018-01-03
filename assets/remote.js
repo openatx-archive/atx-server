@@ -4,7 +4,7 @@ var app = new Vue({
   data: {
     deviceId: '',
     device: {
-      ip: location.hash.substr(1), //'localhost', //'10.242.43.103', //'10.242.62.224',
+      ip: deviceIp,
       port: 7912,
     },
     console: {

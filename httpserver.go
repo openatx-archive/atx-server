@@ -50,6 +50,17 @@ func newHandler() http.Handler {
 		})
 	})
 
+	// 设备远程控制
+	r.HandleFunc("/devices/{udid}/remote", func(w http.ResponseWriter, r *http.Request) {
+		udid := mux.Vars(r)["udid"]
+		info, err := db.DeviceGet(udid)
+		if err != nil {
+			http.Error(w, err.Error(), 404)
+			return
+		}
+		renderHTML(w, "remote.html", info.IP)
+	}).Methods("GET")
+
 	// 设备信息修改
 	r.HandleFunc("/devices/{udid}/edit", func(w http.ResponseWriter, r *http.Request) {
 		udid := mux.Vars(r)["udid"]
