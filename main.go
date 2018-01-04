@@ -21,14 +21,14 @@ import (
 )
 
 const (
-	version         = "dev"
-	atxAgentVersion = "0.1.3"
+	version = "dev"
 )
 
 var (
-	addr    = flag.String("addr", ":8000", "http service address")
-	rdbAddr = flag.String("rdbaddr", "localhost:28015", "rethinkdb address")
-	rdbName = flag.String("rdbname", "atxserver", "rethinkdb database name")
+	addr            = flag.String("addr", ":8000", "http service address")
+	rdbAddr         = flag.String("rdbaddr", "localhost:28015", "rethinkdb address")
+	rdbName         = flag.String("rdbname", "atxserver", "rethinkdb database name")
+	atxAgentVersion string
 )
 
 func handleWebsocketMessage(host string, message []byte) {
@@ -155,6 +155,8 @@ func batchRunCommand(command string) {
 }
 
 func main() {
+	flag.StringVar(&atxAgentVersion, "agent", "0.1.4", "atx-agent version")
+
 	flag.Parse()
 	// log.SetFlags(log.Lshortfile | log.LstdFlags)
 	log.SetLevel(log.DebugLevel)
