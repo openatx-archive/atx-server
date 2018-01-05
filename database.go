@@ -169,7 +169,6 @@ func (db *RdbUtils) SetDeviceAbsent(udid string) error {
 		Udid:              udid,
 		Present:           newBool(false), // &present,
 		PresenceChangedAt: time.Now(),
-		Ready:             newBool(false),
 	})
 }
 
