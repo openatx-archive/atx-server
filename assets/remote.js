@@ -1,5 +1,5 @@
 /* Javascript */
-var app = new Vue({
+window.app = new Vue({
   el: '#app',
   data: {
     deviceId: '',
@@ -7,12 +7,8 @@ var app = new Vue({
       ip: deviceIp,
       port: 7912,
     },
-    console: {
-      content: '',
-    },
     error: '',
     control: null,
-    imagePool: null,
     loading: false,
     canvas: {
       bg: null,
@@ -30,12 +26,22 @@ var app = new Vue({
         height: 1
       }
     },
+    logcat: {
+      follow: true,
+      tagColors: {},
+      lineNumber: 0,
+      maxKeep: 1500,
+      cachedScrollTop: 0,
+      logs: [{
+        lineno: 1,
+        tag: "EsService2",
+        level: "W",
+        content: "loaded /system/lib/egl/libEGL_adreno200.so",
+      }]
+    },
   },
   watch: {},
   computed: {},
-  created: function() {
-    this.imagePool = new ImagePool(100);
-  },
   mounted: function() {
     var URL = window.URL || window.webkitURL;
     var currentSize = null;
@@ -55,8 +61,69 @@ var app = new Vue({
 
     this.enableTouch();
     this.loadLiveScreen();
+
+    window.k = setInterval(function() {
+      var lineno = (this.logcat.lineNumber += 1);
+      this.logcat.logs.push({
+        lineno: lineno,
+        tag: "EsService2",
+        level: "W",
+        content: "loaded /system/lib/egl/libEGL_adreno200.so",
+      });
+      if (this.logcat.follow) {
+        // only keep maxKeep lines
+        var maxKeep = Math.max(20, this.logcat.maxKeep);
+        var size = this.logcat.logs.length;
+        this.logcat.logs = this.logcat.logs.slice(size - maxKeep, size);
+
+        // scroll to end
+        var el = this.$refs.tab_content;
+        var logcat = this.logcat;
+        if (el.scrollTop < logcat.cachedScrollTop) {
+          this.logcat.follow = false;
+        } else {
+          setTimeout(function() {
+            logcat.cachedScrollTop = el.scrollTop = el.scrollHeight - el.clientHeight;
+          }, 2);
+        }
+      }
+    }.bind(this), 200)
   },
   methods: {
+    tabScroll: function(ev) {
+      // var el = ev.target;
+      // var el = this.$refs.tab_content;
+      // var bottom = (el.scrollTop == (el.scrollHeight - el.clientHeight));
+      // console.log("Bottom", bottom, el.scrollTop, el.scrollHeight, el.clientHeight, el.scrollHeight - el.clientHeight)
+      // console.log(ev.target.scrollTop, ev.target.scrollHeight, ev.target.clientHeight);
+      this.logcat.follow = false;
+    },
+    followLog: function() {
+      this.logcat.follow = !this.logcat.follow;
+      if (this.logcat.follow) {
+        var el = this.$refs.tab_content;
+        el.scrollTop = el.scrollHeight - el.clientHeight;
+      }
+    },
+    logcatTag2Color: function(tag) {
+      var color = this.logcat.tagColors[tag];
+      if (!color) {
+        color = this.logcat.tagColors[tag] = getRandomRgb(5);
+      }
+      return color;
+    },
+    logcatLevel2Color: function(level) {
+      switch (level) {
+        case "W":
+          return "goldenrod";
+        case "I":
+          return "darkgreen";
+        case "D":
+          return "gray";
+        default:
+          return "gray";
+      }
+    },
     hold: function(msecs) {
       this.control.touchDown(0, 0.5, 0.5, 5, 0.5)
       this.control.touchCommit();
@@ -227,6 +294,7 @@ var app = new Vue({
       };
 
       this.screenWS = ws;
+      var imagePool = new ImagePool(100);
 
       ws.onopen = function(ev) {
         console.log('screen websocket connected')
@@ -239,7 +307,7 @@ var app = new Vue({
           var blob = new Blob([message.data], {
             type: 'image/jpeg'
           })
-          var img = self.imagePool.next();
+          var img = imagePool.next();
           img.onload = function() {
             canvas.width = img.width
             canvas.height = img.height

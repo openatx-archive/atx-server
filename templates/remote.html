@@ -8,8 +8,16 @@
   <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
   <link rel="stylesheet" href="//cdn.jsdelivr.net/bootstrap.select/1.12.2/css/bootstrap-select.min.css">
   <link rel="stylesheet" href="/assets/remote.css">
+  <link rel="stylesheet" href="/assets/bootstrap-tabs.css">
+  <link rel="stylesheet" href="/assets/logcat.css">
   <!-- jstree -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jstree@3.3.4/dist/themes/default/style.min.css">
+  <style>
+    /* body {
+      background: #EDECEC;
+      padding: 50px
+    } */
+  </style>
 </head>
 
 <body>
@@ -46,7 +54,74 @@
       </div>
       <div id="vertical-gap1" class="handle vertical-gap"></div>
       <div id="right">
-        Right part
+
+        <div class="row box">
+          <div class="col-md-12 box">
+            <!-- Nav tabs -->
+            <div class="card">
+              <ul class="nav nav-tabs" role="tablist">
+                <li role="presentation" class="active"><a href="#home" aria-controls="home" role="tab" data-toggle="tab">Logcat</a></li>
+                <li role="presentation"><a href="#profile" aria-controls="profile" role="tab" data-toggle="tab">Profile</a></li>
+                <li role="presentation"><a href="#messages" aria-controls="messages" role="tab" data-toggle="tab">Messages</a></li>
+                <li role="presentation"><a href="#settings" aria-controls="settings" role="tab" data-toggle="tab">Settings</a></li>
+                <li class="follow-log" v-bind:style="{'border-color': logcat.follow ? 'green' : 'gray'}" @click="followLog">
+                  <span class="hover-content"><i class="glyphicon glyphicon-arrow-down"></i> Scroll to End of Log</span>
+                </li>
+              </ul>
+
+              <!-- Tab panes -->
+              <div class="tab-content" ref="tab_content" @mousewheel="tabScroll">
+                <div role="tabpanel" class="tab-pane active" id="home">
+                  <p>最大保存行数: <input type="number" v-model.number="logcat.maxKeep"></p>
+                  <div class="input-group input-group-sm" style="width: 400px">
+                    <span class="input-group-addon">Package name</span>
+                    <input type="text" class="form-control" placeholder="com.example...">
+                    <span class="input-group-btn">
+                      <button class="btn btn-default" type="button"><span class="glyphicon glyphicon-refresh"></span></button>
+                    </span>
+                  </div>
+                  <br>
+                  <table class="logcat" ref="logcat">
+                    <tbody>
+                      <tr v-for="v in logcat.logs">
+                        <td class="logcat-lineno" :style="{color: logcatTag2Color(v.tag)}">{{v.lineno}}</td>
+                        <td class="logcat-tag" :style="{color: logcatTag2Color(v.tag)}">{{v.tag}}</td>
+                        <td class="logcat-level" :style="{'background-color': logcatLevel2Color(v.level)}">{{v.level}}</td>
+                        <td class="logcat-content">{{v.content}}</td>
+                      </tr>
+                      <tr>
+                        <td class="logcat-lineno">2000</td>
+                        <td class="logcat-tag" style="color: rgb(105, 155, 221)">EsService</td>
+                        <td class="logcat-level">I</td>
+                        <td>readResults: read results: 32, lastRequestId: 330</td>
+                      </tr>
+                      <tr>
+                        <td class="logcat-lineno">2000</td>
+                        <td></td>
+                        <td class="logcat-level">I</td>
+                        <td class="logcat-content">Kgd.KeyguardUpdateMonitor: mTimeTickBroadcastReceiver current state is mBootCompleted=true mDeviceProvisioned=true mPhoneState=0 Keyguard.isShowing = false Keyguard.isOccluded = false mScreenOn=true</td>
+                      </tr>
+                      <tr>
+                        <td class="logcat-lineno">2000</td>
+                        <td class="logcat-tag">libEGL</td>
+                        <td class="logcat-level" style="background-color: gray">D</td>
+                        <td class="logcat-content">loaded /system/lib/egl/libEGL_adreno200.so</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div role="tabpanel" class="tab-pane" id="profile">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen
+                  book.
+                </div>
+                <div role="tabpanel" class="tab-pane" id="messages">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen
+                  book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more
+                  recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.</div>
+                <div role="tabpanel" class="tab-pane" id="settings">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen
+                  book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passage..</div>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="hidden">
           <button class="btn btn-xs" @click="hold(40)">原地跳</button>
           <button class="btn btn-xs" @click="hold(400)">紧挨着</button>
