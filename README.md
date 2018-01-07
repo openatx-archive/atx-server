@@ -1,10 +1,46 @@
 # ATX-SERVER
 Manage batch of atx-agents
 
+# Install
+重要：需要有go语言的基础，知道该如何编译一个go的程序
+
+1. Install and start [rethinkdb](https://rethinkdb.com)
+2. Install [go](https://golang.org)
+
+Compile with go
+
+```bash
+$ go get -v github.com/openatx/atx-server
+$ cd $GOPATH/src/github.com/openatx/atx-server
+$ go build
+```
+
 # Usage
+launch `rethinkdb`
+
+```bash
+$ rethinkdb
+Running rethinkdb 2.3.6 (CLANG 8.1.0 (clang-802.0.42))...
+Running on Darwin 16.6.0 x86_64
+...
 ```
-go run main.go -addr :8000
+
+launch `atx-server`
+
 ```
+./atx-server -addr :8000
+```
+
+Install `atx-agent` using [uiautomator2](https://github.com/openatx/uiautomator2) into android phone. your android phone and server running `atx-server` should in the same intranet.
+
+Suppose server running `atx-server` got the ip `10.0.1.1`, listen port `8000`. Do the following command
+
+```bash
+$ pip install -U --pre uiautomator2
+$ python -m uiautomator2 init 10.0.1.1:8000
+```
+
+open browser <http://localhost:8000>, you should see the device listed on the web.
 
 # APIs
 ## /list 接口
