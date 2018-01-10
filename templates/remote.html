@@ -44,6 +44,7 @@
           <canvas id="fgCanvas" class="canvas-fg" v-bind:style="canvasStyle"></canvas>
           <canvas id="bgCanvas" class="canvas-bg" v-bind:style="canvasStyle"></canvas>
           <span class="finger finger-0" style="transform: translate3d(200px, 100px, 0px)"></span>
+          <span class="finger finger-1" style="transform: translate3d(200px, 100px, 0px)"></span>
           <!-- <img style="z-index: 10" v-if="loading" src="/assets/loading.svg"> -->
         </section>
         <section id="footer">
@@ -60,8 +61,8 @@
             <!-- Nav tabs -->
             <div class="card">
               <ul class="nav nav-tabs" role="tablist">
-                <li role="presentation" class="active"><a href="#home" aria-controls="home" role="tab" data-toggle="tab">Logcat</a></li>
-                <li role="presentation"><a href="#profile" aria-controls="profile" role="tab" data-toggle="tab">Profile</a></li>
+                <li role="presentation" class="active"><a href="#home" aria-controls="home" role="tab" data-toggle="tab">TODO</a></li>
+                <li role="presentation"><a href="#logcat" aria-controls="logcat" role="tab" data-toggle="tab">Logcat</a></li>
                 <li role="presentation"><a href="#messages" aria-controls="messages" role="tab" data-toggle="tab">Messages</a></li>
                 <li role="presentation"><a href="#settings" aria-controls="settings" role="tab" data-toggle="tab">Settings</a></li>
                 <li class="follow-log" v-bind:style="{'border-color': logcat.follow ? 'green' : 'gray'}" @click="followLog">
@@ -71,7 +72,7 @@
 
               <!-- Tab panes -->
               <div class="tab-content" ref="tab_content" @mousewheel="tabScroll">
-                <div role="tabpanel" class="tab-pane active" id="home">
+                <div role="tabpanel" class="tab-pane" id="logcat">
                   <p>最大保存行数: <input type="number" v-model.number="logcat.maxKeep"></p>
                   <div class="input-group input-group-sm" style="width: 400px">
                     <span class="input-group-addon">Package name</span>
@@ -110,7 +111,7 @@
                     </tbody>
                   </table>
                 </div>
-                <div role="tabpanel" class="tab-pane" id="profile">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen
+                <div role="tabpanel" class="tab-pane active" id="home">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen
                   book.
                 </div>
                 <div role="tabpanel" class="tab-pane" id="messages">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen
@@ -164,6 +165,6 @@
   var deviceIp = "[[.]]";
 </script>
 <!-- need set var "deviceIp" before -->
-<script src="/assets/remote.js"></script>
+<script src='[["/assets/remote.js" | urlhash]]'></script>
 
 </html>

@@ -7,6 +7,9 @@ import (
 	"io"
 	"net/http"
 	"time"
+	"strings"
+	"os"
+	"fmt"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
@@ -31,10 +34,26 @@ var (
 
 	// Time allowed to read the next pong message from client
 	wsPongWait = wsPingPeriod * 3
+
+	funcMap template.FuncMap
 )
 
+func init(){
+	funcMap =  template.FuncMap{
+		"title": strings.Title,
+		"urlhash": func(s string) string{
+			path := strings.TrimPrefix(s, "/")
+			info, err := os.Stat(path)
+			if err != nil {
+				return s + "#no-such-file"
+			}
+			return fmt.Sprintf("%s?t=%d", s, info.ModTime().Unix())
+		},
+	}
+}
+
 func renderHTML(w http.ResponseWriter, filename string, value interface{}) {
-	tmpl := template.Must(template.New("").Delims("[[", "]]").ParseGlob("templates/*.html"))
+	tmpl := template.Must(template.New("").Funcs(funcMap).Delims("[[", "]]").ParseGlob("templates/*.html"))
 	tmpl.ExecuteTemplate(w, filename, value)
 	// content, _ := ioutil.ReadFile("templates/" + filename)
 	// template.Must(template.New(filename).Parse(string(content))).Execute(w, nil)

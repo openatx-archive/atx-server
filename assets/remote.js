@@ -62,7 +62,7 @@ window.app = new Vue({
     this.enableTouch();
     this.loadLiveScreen();
 
-    window.k = setInterval(function() {
+    window.k = setTimeout(function() {
       var lineno = (this.logcat.lineNumber += 1);
       this.logcat.logs.push({
         lineno: lineno,
@@ -421,7 +421,6 @@ window.app = new Vue({
 
         fakePinch = e.altKey
         calculateBounds()
-          // startMousing()
 
         var x = e.pageX - screen.bounds.x
         var y = e.pageY - screen.bounds.y
@@ -452,7 +451,6 @@ window.app = new Vue({
         activeFinger(0, e.pageX, e.pageY, pressure);
         var x = e.pageX - screen.bounds.x
         var y = e.pageY - screen.bounds.y
-        var rotation = 0;
         var scaled = coords(screen.bounds.w, screen.bounds.h, x, y, self.rotation);
         control.touchMove(0, scaled.xP, scaled.yP, pressure);
         control.touchCommit();
@@ -469,13 +467,6 @@ window.app = new Vue({
         }
         e.preventDefault()
 
-        var pos = coord(e);
-        // change precision
-        pos.px = Math.floor(pos.px * 1000) / 1000;
-        pos.py = Math.floor(pos.py * 1000) / 1000;
-        pos.x = Math.floor(pos.px * element.width);
-        pos.y = Math.floor(pos.py * element.height);
-
         control.touchUp(0)
         control.touchCommit();
         stopMousing()
@@ -483,28 +474,28 @@ window.app = new Vue({
 
       function stopMousing() {
         element.removeEventListener('mousemove', mouseMoveListener);
-        element.addEventListener('mousemove', mouseHoverListener);
+        // element.addEventListener('mousemove', mouseHoverListener);
         document.removeEventListener('mouseup', mouseUpListener);
         deactiveFinger(0);
       }
 
-      function coord(event) {
-        var e = event;
-        if (e.originalEvent) {
-          e = e.originalEvent
-        }
-        calculateBounds()
-        var x = e.pageX - screen.bounds.x
-        var y = e.pageY - screen.bounds.y
-        var px = x / screen.bounds.w;
-        var py = y / screen.bounds.h;
-        return {
-          px: px,
-          py: py,
-          x: Math.floor(px * element.width),
-          y: Math.floor(py * element.height),
-        }
-      }
+      // function coord(event) {
+      //   var e = event;
+      //   if (e.originalEvent) {
+      //     e = e.originalEvent
+      //   }
+      //   calculateBounds()
+      //   var x = e.pageX - screen.bounds.x
+      //   var y = e.pageY - screen.bounds.y
+      //   var px = x / screen.bounds.w;
+      //   var py = y / screen.bounds.h;
+      //   return {
+      //     px: px,
+      //     py: py,
+      //     x: Math.floor(px * element.width),
+      //     y: Math.floor(py * element.height),
+      //   }
+      // }
 
       function mouseHoverListener(event) {
         var e = event;
@@ -516,11 +507,9 @@ window.app = new Vue({
           return
         }
         e.preventDefault()
-          // startMousing()
 
         var x = e.pageX - screen.bounds.x
         var y = e.pageY - screen.bounds.y
-        var pos = coord(event);
       }
 
       function markPosition(pos) {
@@ -538,9 +527,62 @@ window.app = new Vue({
         ctx.fill();
       }
 
+      var wheelTimer, fromYP;
+
+      function mouseWheelDelayTouchUp() {
+        clearTimeout(wheelTimer);
+        wheelTimer = setTimeout(function() {
+          fromYP = null;
+          control.touchUp(1)
+          control.touchCommit();
+          deactiveFinger(0);
+          deactiveFinger(1);
+        }, 100)
+      }
+
+      function mouseWheelListener(event) {
+        var e = event;
+        if (e.originalEvent) {
+          e = e.originalEvent
+        }
+        e.preventDefault()
+        calculateBounds()
+
+        var x = e.pageX - screen.bounds.x
+        var y = e.pageY - screen.bounds.y
+        var pressure = 0.5;
+        var scaled;
+
+        if (!fromYP) {
+          fromYP = y / screen.bounds.h; // display Y percent
+          // touch down when first detect mousewheel
+          scaled = coords(screen.bounds.w, screen.bounds.h, x, y, self.rotation);
+          control.touchDown(1, scaled.xP, scaled.yP, pressure);
+          control.touchCommit();
+          activeFinger(0, e.pageX, e.pageY, pressure);
+        }
+        // caculate position after scroll
+        var toYP = fromYP + (event.wheelDeltaY < 0 ? -0.1 : 0.1);
+        toYP = Math.max(0, Math.min(1, toYP));
+
+        var step = Math.max((toYP - fromYP) / 5, 0.01) * (event.wheelDeltaY < 0 ? -1 : 1);
+        for (var yP = fromYP; yP < 1 && yP > 0 && Math.abs(yP - toYP) > 0.0001; yP += step) {
+          y = screen.bounds.h * yP;
+          var pageY = y + screen.bounds.y;
+          scaled = coords(screen.bounds.w, screen.bounds.h, x, y, self.rotation);
+          activeFinger(1, e.pageX, pageY, pressure);
+          control.touchMove(1, scaled.xP, scaled.yP, pressure);
+          control.touchWait(5);
+          control.touchCommit();
+        }
+        fromYP = toYP;
+        mouseWheelDelayTouchUp()
+      }
+
       /* bind listeners */
       element.addEventListener('mousedown', mouseDownListener);
       element.addEventListener('mousemove', mouseHoverListener);
+      element.addEventListener('mousewheel', mouseWheelListener);
     }
   }
 })
