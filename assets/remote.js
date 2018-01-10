@@ -357,7 +357,11 @@ window.app = new Vue({
       }
 
       ws.onclose = function(ev) {
-        console.log("screen websocket closed")
+        console.log("screen websocket closed", ev.code)
+      }
+
+      ws.onerror = function(ev) {
+        console.log("screen websocket error")
       }
     },
     enableTouch: function() {
@@ -535,8 +539,8 @@ window.app = new Vue({
           fromYP = null;
           control.touchUp(1)
           control.touchCommit();
-          deactiveFinger(0);
-          deactiveFinger(1);
+          // deactiveFinger(0);
+          // deactiveFinger(1);
         }, 100)
       }
 
@@ -559,10 +563,10 @@ window.app = new Vue({
           scaled = coords(screen.bounds.w, screen.bounds.h, x, y, self.rotation);
           control.touchDown(1, scaled.xP, scaled.yP, pressure);
           control.touchCommit();
-          activeFinger(0, e.pageX, e.pageY, pressure);
+          // activeFinger(0, e.pageX, e.pageY, pressure);
         }
         // caculate position after scroll
-        var toYP = fromYP + (event.wheelDeltaY < 0 ? -0.1 : 0.1);
+        var toYP = fromYP + (event.wheelDeltaY < 0 ? -0.05 : 0.05);
         toYP = Math.max(0, Math.min(1, toYP));
 
         var step = Math.max((toYP - fromYP) / 5, 0.01) * (event.wheelDeltaY < 0 ? -1 : 1);
@@ -570,9 +574,9 @@ window.app = new Vue({
           y = screen.bounds.h * yP;
           var pageY = y + screen.bounds.y;
           scaled = coords(screen.bounds.w, screen.bounds.h, x, y, self.rotation);
-          activeFinger(1, e.pageX, pageY, pressure);
+          // activeFinger(1, e.pageX, pageY, pressure);
           control.touchMove(1, scaled.xP, scaled.yP, pressure);
-          control.touchWait(5);
+          control.touchWait(10);
           control.touchCommit();
         }
         fromYP = toYP;
