@@ -28,7 +28,7 @@ Running on Darwin 16.6.0 x86_64
 launch `atx-server`
 
 ```
-./atx-server -addr :8000
+./atx-server --port 8000
 ```
 
 Install `atx-agent` using [uiautomator2](https://github.com/openatx/uiautomator2) into android phone. your android phone and server running `atx-server` should in the same intranet.
@@ -42,6 +42,21 @@ $ python -m uiautomator2 init 10.0.1.1:8000
 
 open browser <http://localhost:8000>, you should see the device listed on the web.
 
+## Advanced usage
+### Set up <https://www.dingtalk.com> notification.
+1. Usage command flag
+
+    ```
+    ./atx-server --ding-token 13gb4db7c276d22e84f788fa693b729d53218b8e07d6ede43de79360c962 --port 8080
+    ```
+
+2. Set up env var
+
+    ```
+    export DING_TOKEN="13gb4db7c276d22e84f788fa693b729d53218b8e07d6ede43de79360c962"
+    ./atx-server --port 8080
+    ```
+    
 # APIs
 ## /list 接口
 

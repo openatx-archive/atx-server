@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"math"
@@ -13,6 +12,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/alecthomas/kingpin"
+	"github.com/codeskyblue/dingrobot"
 	"github.com/codeskyblue/inforus"
 
 	"github.com/gorilla/websocket"
@@ -25,26 +26,16 @@ const (
 )
 
 var (
-	addr            = flag.String("addr", ":8000", "http service address")
-	rdbAddr         = flag.String("rdbaddr", "localhost:28015", "rethinkdb address")
-	rdbName         = flag.String("rdbname", "atxserver", "rethinkdb database name")
+	port            = kingpin.Flag("port", "http server listen port").Short('p').Default("8000").Int()
+	addr            = kingpin.Flag("addr", "http server listen address").Default(":8000").String()
+	rdbAddr         = kingpin.Flag("rdbaddr", "rethinkdb address").Default("localhost:28015").String()
+	rdbName         = kingpin.Flag("rdbname", "rethinkdb database name").Default("atxserver").String()
 	atxAgentVersion string
+	dingtalkToken   string
 )
 
 func handleWebsocketMessage(host string, message []byte) {
 	return
-	// msg := &proto.CommonMessage{}
-	// reader := json.NewDecoder(bytes.NewReader(message))
-	// if err := reader.Decode(msg); err != nil {
-	// 	return
-	// }
-	// fmt.Printf("msg type: %v\n", msg.Type)
-	// if msg.Type == proto.DeviceInfoMessage {
-	// 	jsonData, _ := json.Marshal(msg.Data)
-	// 	// devInfo := hostsManager.maps[host] // TODO: lock and unlock
-	// 	json.NewDecoder(bytes.NewReader(jsonData)).Decode(devInfo)
-	// 	fmt.Printf("brand: %s\n", devInfo.Brand)
-	// }
 }
 
 func echo(w http.ResponseWriter, r *http.Request) {
@@ -92,7 +83,16 @@ func echo(w http.ResponseWriter, r *http.Request) {
 		devInfo.Memory.Around = fmt.Sprintf("%d GB", around)
 	}
 	db.UpdateOrInsertDevice(*devInfo)
-	defer db.SetDeviceAbsent(devInfo.Udid)
+	defer func() {
+		db.SetDeviceAbsent(devInfo.Udid)
+		// TODO(ssx): global var, not very function programing
+		if dingtalkToken != "" {
+			robot := dingrobot.New(dingtalkToken)
+			if err := robot.Text(devInfo.Brand + " " + devInfo.Model + " " + devInfo.IP + " offline"); err != nil {
+				log.Println("dingding send text err:", err)
+			}
+		}
+	}()
 
 	// ping ticker
 	go func() {
@@ -155,14 +155,31 @@ func batchRunCommand(command string) {
 }
 
 func main() {
-	flag.StringVar(&atxAgentVersion, "agent", "0.1.4", "atx-agent version")
+	// Refs: atx-agent version https://github.com/openatx/atx-agent/releases
+	kingpin.Flag("agent", "atx-agent version").Default("0.1.5").StringVar(&atxAgentVersion)
+	kingpin.Flag("ding-token", "DingDing robot token (env: DING_TOKEN)").OverrideDefaultFromEnvar("DING_TOKEN").StringVar(&dingtalkToken)
+	kingpin.Version(version)
+	kingpin.HelpFlag.Short('h')
+	kingpin.Parse()
 
-	flag.Parse()
 	// log.SetFlags(log.Lshortfile | log.LstdFlags)
 	log.SetLevel(log.DebugLevel)
 	log.SetFormatter(&log.TextFormatter{})
 	inforus.AddHookDefault()
 
+	if *port != 8000 {
+		*addr = fmt.Sprintf(":%d", *port)
+	}
+
+	if dingtalkToken != "" {
+		log.Println("dingtalk notification enabled")
+		if err := dingrobot.New(dingtalkToken).Text("atx-server started"); err != nil {
+			log.Println("dingtalk test notification err:", err)
+		}
+	}
+
+	log.Info("initial database")
 	initDB(*rdbAddr, *rdbName)
+	log.Info("listen address", *addr)
 	log.Fatal(http.ListenAndServe(*addr, newHandler()))
 }
