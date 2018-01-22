@@ -1,5 +1,8 @@
 # ATX-SERVER
+[![GitHub stars](https://img.shields.io/badge/govendor-vendor-blue.svg)](https://github.com/kardianos/govendor)
+
 Manage batch of atx-agents
+
 
 # Install
 重要：需要有go语言的基础，知道该如何编译一个go的程序
@@ -56,7 +59,7 @@ open browser <http://localhost:8000>, you should see the device listed on the we
     export DING_TOKEN="13gb4db7c276d22e84f788fa693b729d53218b8e07d6ede43de79360c962"
     ./atx-server --port 8080
     ```
-    
+
 # APIs
 ## /list 接口
 

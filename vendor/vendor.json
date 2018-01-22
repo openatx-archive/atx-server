@@ -1,0 +1,193 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "FGNb5tI8jRefAKlzFw07xhGbzMY=",
+			"path": "github.com/alecthomas/kingpin",
+			"revision": "80e348deb32f133e23c260117a1fac6b8a144209",
+			"revisionTime": "2017-12-24T00:46:49Z"
+		},
+		{
+			"checksumSHA1": "KmjnydoAbofMieIWm+it5OWERaM=",
+			"path": "github.com/alecthomas/template",
+			"revision": "a0175ee3bccc567396460bf5acd36800cb10c49c",
+			"revisionTime": "2016-04-05T07:15:01Z"
+		},
+		{
+			"checksumSHA1": "3wt0pTXXeS+S93unwhGoLIyGX/Q=",
+			"path": "github.com/alecthomas/template/parse",
+			"revision": "a0175ee3bccc567396460bf5acd36800cb10c49c",
+			"revisionTime": "2016-04-05T07:15:01Z"
+		},
+		{
+			"checksumSHA1": "fCc3grA7vIxfBru7R3SqjcW+oLI=",
+			"path": "github.com/alecthomas/units",
+			"revision": "2efee857e7cfd4f3d0138cc3cbb1b4966962b93a",
+			"revisionTime": "2015-10-22T06:55:26Z"
+		},
+		{
+			"checksumSHA1": "hTThB1Cw2ue02RD5Oig4eu1Dkzk=",
+			"path": "github.com/cenkalti/backoff",
+			"revision": "309aa717adbf351e92864cbedf9cca0b769a4b5a",
+			"revisionTime": "2017-10-07T11:45:50Z"
+		},
+		{
+			"checksumSHA1": "hEkKRrdnLP2v99OfyYbSxC4KUfI=",
+			"path": "github.com/codeskyblue/dingrobot",
+			"revision": "18a295f1ddd863fb806b98cbd128919660f5afe4",
+			"revisionTime": "2017-12-14T07:49:58Z"
+		},
+		{
+			"checksumSHA1": "N18iLqnFuQLwKFbw46Krl6yWG5c=",
+			"path": "github.com/codeskyblue/inforus",
+			"revision": "7f983fbee9b16285addcc395d36a2106b395132d",
+			"revisionTime": "2017-12-21T02:59:54Z"
+		},
+		{
+			"checksumSHA1": "yqF125xVSkmfLpIVGrLlfE05IUk=",
+			"path": "github.com/golang/protobuf/proto",
+			"revision": "1e59b77b52bf8e4b449a57e6f79f21226d571845",
+			"revisionTime": "2017-11-13T18:07:20Z"
+		},
+		{
+			"checksumSHA1": "+i76HB4vEOFz+vLYsUmThS6oeQI=",
+			"path": "github.com/gorilla/mux",
+			"revision": "24fca303ac6da784b9e8269f724ddeb0b2eea5e7",
+			"revisionTime": "2017-09-05T17:10:44Z"
+		},
+		{
+			"checksumSHA1": "8KawKW6FJguwWz5cPvMg/ChmepE=",
+			"path": "github.com/gorilla/websocket",
+			"revision": "4201258b820c74ac8e6922fc9e6b52f71fe46f8d",
+			"revisionTime": "2017-09-26T23:33:35Z"
+		},
+		{
+			"checksumSHA1": "O0r0hj4YL+jSRNjnshkeH4GY+4s=",
+			"path": "github.com/hailocab/go-hostpool",
+			"revision": "e80d13ce29ede4452c43dea11e79b9bc8a15b478",
+			"revisionTime": "2016-01-25T11:53:50Z"
+		},
+		{
+			"checksumSHA1": "WGJscGTXRsE32tL+z1ljXPXYhRE=",
+			"path": "github.com/mash/go-accesslog",
+			"revision": "9ba8e13f36087d6cb83d9a9f17f9e8da137d5ee9",
+			"revisionTime": "2015-10-29T03:09:28Z"
+		},
+		{
+			"checksumSHA1": "hpXnjCM/a0edhWUb2+and0mnPyY=",
+			"path": "github.com/opentracing/opentracing-go",
+			"revision": "1361b9cd60be79c4c3a7fa9841b3c132e40066a7",
+			"revisionTime": "2017-10-03T13:35:19Z"
+		},
+		{
+			"checksumSHA1": "uhDxBvLEqRAMZKgpTZ8MFuLIIM8=",
+			"path": "github.com/opentracing/opentracing-go/ext",
+			"revision": "1361b9cd60be79c4c3a7fa9841b3c132e40066a7",
+			"revisionTime": "2017-10-03T13:35:19Z"
+		},
+		{
+			"checksumSHA1": "tnkdNJbJxNKuPZMWapP1xhKIIGw=",
+			"path": "github.com/opentracing/opentracing-go/log",
+			"revision": "1361b9cd60be79c4c3a7fa9841b3c132e40066a7",
+			"revisionTime": "2017-10-03T13:35:19Z"
+		},
+		{
+			"checksumSHA1": "ySaT8G3I3y4MmnoXOYAAX0rC+p8=",
+			"path": "github.com/sirupsen/logrus",
+			"revision": "d682213848ed68c0a260ca37d6dd5ace8423f5ba",
+			"revisionTime": "2017-12-05T20:32:29Z"
+		},
+		{
+			"checksumSHA1": "6X1jNQkXeyiqwpCLzFoK6WZV0ic=",
+			"path": "github.com/tomasen/realip",
+			"revision": "b5850897b7b539a1c9f22cdaa3b547d1bd453db8",
+			"revisionTime": "2017-12-12T13:33:04Z"
+		},
+		{
+			"checksumSHA1": "1MGpGDQqnUoRpv7VEcQrXOBydXE=",
+			"path": "golang.org/x/crypto/pbkdf2",
+			"revision": "d585fd2cc9195196078f516b69daff6744ef5e84",
+			"revisionTime": "2017-12-16T04:08:15Z"
+		},
+		{
+			"checksumSHA1": "X1NTlfcau2XcV6WtAHF6b/DECOA=",
+			"path": "golang.org/x/crypto/ssh/terminal",
+			"revision": "d585fd2cc9195196078f516b69daff6744ef5e84",
+			"revisionTime": "2017-12-16T04:08:15Z"
+		},
+		{
+			"checksumSHA1": "GtamqiJoL7PGHsN454AoffBFMa8=",
+			"path": "golang.org/x/net/context",
+			"revision": "d866cfc389cec985d6fda2859936a575a55a3ab6",
+			"revisionTime": "2017-12-11T20:45:21Z"
+		},
+		{
+			"checksumSHA1": "52lt0j+w9Bcz8AJUlv2NmBE/5TI=",
+			"path": "golang.org/x/sys/unix",
+			"revision": "d818ba11af4465e00c1998bd3f8a55603b422290",
+			"revisionTime": "2017-12-20T16:06:35Z"
+		},
+		{
+			"checksumSHA1": "du9BFcn4Qlm/4H3jlRBGGH43aQI=",
+			"path": "golang.org/x/sys/windows",
+			"revision": "d818ba11af4465e00c1998bd3f8a55603b422290",
+			"revisionTime": "2017-12-20T16:06:35Z"
+		},
+		{
+			"checksumSHA1": "P8yR+xObqoPUA4fcLFV2eGNNSWc=",
+			"path": "gopkg.in/fatih/pool.v2",
+			"revision": "010e0b745d12eaf8426c95f9c3924d81dd0b668f",
+			"revisionTime": "2017-10-10T08:14:17Z"
+		},
+		{
+			"checksumSHA1": "BHGg/qtOLaMJt9tNO8pF3FE187I=",
+			"path": "gopkg.in/gorethink/gorethink.v3",
+			"revision": "7f5bdfd858bb064d80559b2a32b86669c5de5d3b",
+			"revisionTime": "2017-09-28T17:27:53Z"
+		},
+		{
+			"checksumSHA1": "yjQTriVMAzKdR8CKhDFQMbgrFvg=",
+			"path": "gopkg.in/gorethink/gorethink.v3/encoding",
+			"revision": "7f5bdfd858bb064d80559b2a32b86669c5de5d3b",
+			"revisionTime": "2017-09-28T17:27:53Z"
+		},
+		{
+			"checksumSHA1": "aWKVb1QHxeor0el0wybSLEd4pBc=",
+			"path": "gopkg.in/gorethink/gorethink.v3/ql2",
+			"revision": "7f5bdfd858bb064d80559b2a32b86669c5de5d3b",
+			"revisionTime": "2017-09-28T17:27:53Z"
+		},
+		{
+			"checksumSHA1": "E5k29XlUCWLvucxkOimNHtozB7g=",
+			"path": "gopkg.in/gorethink/gorethink.v3/types",
+			"revision": "7f5bdfd858bb064d80559b2a32b86669c5de5d3b",
+			"revisionTime": "2017-09-28T17:27:53Z"
+		},
+		{
+			"checksumSHA1": "VGHJdYKmjpRrYZLL//RDkCv/lIU=",
+			"path": "gopkg.in/gorethink/gorethink.v4",
+			"revision": "eec03bd47cfc11965a9de004ff86add2a88e65b0",
+			"revisionTime": "2017-12-14T15:00:17Z"
+		},
+		{
+			"checksumSHA1": "m4r8pb6qDB82QEwlDcSfevL0Q0E=",
+			"path": "gopkg.in/gorethink/gorethink.v4/encoding",
+			"revision": "eec03bd47cfc11965a9de004ff86add2a88e65b0",
+			"revisionTime": "2017-12-14T15:00:17Z"
+		},
+		{
+			"checksumSHA1": "+h6JKQLmkoVeawfAXif5QQxx05Q=",
+			"path": "gopkg.in/gorethink/gorethink.v4/ql2",
+			"revision": "eec03bd47cfc11965a9de004ff86add2a88e65b0",
+			"revisionTime": "2017-12-14T15:00:17Z"
+		},
+		{
+			"checksumSHA1": "b5QALboaWWtOUzo6ChPiBKcEhcU=",
+			"path": "gopkg.in/gorethink/gorethink.v4/types",
+			"revision": "eec03bd47cfc11965a9de004ff86add2a88e65b0",
+			"revisionTime": "2017-12-14T15:00:17Z"
+		}
+	],
+	"rootPath": "github.com/openatx/atx-server"
+}
