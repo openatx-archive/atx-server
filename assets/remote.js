@@ -41,7 +41,11 @@ window.app = new Vue({
     },
   },
   watch: {},
-  computed: {},
+  computed: {
+    deviceUrl: function() {
+      return "http://" + this.device.ip + ":" + this.device.port;
+    }
+  },
   mounted: function() {
     var URL = window.URL || window.webkitURL;
     var currentSize = null;
@@ -90,6 +94,14 @@ window.app = new Vue({
     }.bind(this), 200)
   },
   methods: {
+    fixRotation: function() {
+      $.ajax({
+        url: this.deviceUrl + "/info/rotation",
+        method: "post",
+      }).then(function(ret) {
+        console.log("rotation fixed")
+      })
+    },
     tabScroll: function(ev) {
       // var el = ev.target;
       // var el = this.$refs.tab_content;
@@ -134,7 +146,7 @@ window.app = new Vue({
     keyevent: function(meta) {
       console.log("keyevent", meta)
       $.ajax({
-        url: "http://" + this.device.ip + ":" + this.device.port + "/shell",
+        url: this.deviceUrl + "/shell",
         method: "post",
         data: {
           command: "input keyevent " + meta.toUpperCase(),
@@ -285,7 +297,7 @@ window.app = new Vue({
       var BLANK_IMG =
         'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
       var protocol = location.protocol == "http:" ? "ws://" : "wss://"
-      var ws = new WebSocket('ws://' + this.device.ip + ':' + this.device.port + '/minicap');
+      var ws = new WebSocket(this.deviceUrl.replace("http:", "ws:") + '/minicap');
       var canvas = document.getElementById('bgCanvas')
       var ctx = canvas.getContext('2d');
       var lastScreenSize = {
@@ -375,7 +387,7 @@ window.app = new Vue({
         bounds: {}
       }
 
-      var ws = new WebSocket("ws://" + this.device.ip + ':' + this.device.port + "/minitouch")
+      var ws = new WebSocket(this.deviceUrl.replace("http:", "ws:") + "/minitouch")
       ws.onerror = function(ev) {
         console.log("minitouch websocket error:", ev)
       }

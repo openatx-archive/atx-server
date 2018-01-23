@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="utf-8" />
-  <title>DRC</title>
+  <title>DRC [[.]]</title>
   <link rel="stylesheet" href="//cdn.jsdelivr.net/bootstrap/3.3.7/css/bootstrap.min.css">
   <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
   <link rel="stylesheet" href="//cdn.jsdelivr.net/bootstrap.select/1.12.2/css/bootstrap-select.min.css">
@@ -48,9 +48,9 @@
           <!-- <img style="z-index: 10" v-if="loading" src="/assets/loading.svg"> -->
         </section>
         <section id="footer">
+          <button class="btn" @click="keyevent('menu')"><i class="glyphicon glyphicon-menu-hamburger"></i> Menu</button>
           <button class="btn" @click="keyevent('home')"><i class="fa fa-home"></i> Home</button>
           <button class="btn" @click="keyevent('back')"><i class="fa fa-chevron-left"></i> Back</button>
-          <button class="btn" @click="keyevent('menu')"><i class="glyphicon glyphicon-menu-hamburger"></i> Menu</button>
         </section>
       </div>
       <div id="vertical-gap1" class="handle vertical-gap"></div>
@@ -111,8 +111,8 @@
                     </tbody>
                   </table>
                 </div>
-                <div role="tabpanel" class="tab-pane active" id="home">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen
-                  book.
+                <div role="tabpanel" class="tab-pane active" id="home">
+                  <button @click="fixRotation" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-repeat"></span> 旋转修复</button> 旋转修复功能需要atx-agent的版本 >= 0.1.6
                 </div>
                 <div role="tabpanel" class="tab-pane" id="messages">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen
                   book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more
@@ -122,15 +122,6 @@
               </div>
             </div>
           </div>
-        </div>
-        <div class="hidden">
-          <button class="btn btn-xs" @click="hold(40)">原地跳</button>
-          <button class="btn btn-xs" @click="hold(400)">紧挨着</button>
-          <button class="btn btn-sm btn-default" @click="hold(510)">间隔半个</button>
-          <button class="btn btn-md btn-default" @click="hold(550)">间隔0.75</button>
-          <button class="btn btn-default" @click="hold(750)">间隔一个</button>
-          <button class="btn btn-lg" @click="hold(850)">间隔两个</button>
-          <button class="btn btn-lg" @click="hold(900)">超远</button>
         </div>
       </div>
     </div>
