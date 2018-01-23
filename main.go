@@ -86,9 +86,9 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		db.SetDeviceAbsent(devInfo.Udid)
 		// TODO(ssx): global var, not very function programing
-		if dingtalkToken != "" {
+		if info, err := db.DeviceGet(devInfo.Udid); err == nil && dingtalkToken != "" {
 			robot := dingrobot.New(dingtalkToken)
-			if err := robot.Text(devInfo.Brand + " " + devInfo.Model + " " + devInfo.IP + " offline"); err != nil {
+			if err := robot.Text(info.PropertyId + " " + info.Serial + "\n" + info.Brand + " " + info.Model + " " + info.IP + " offline"); err != nil {
 				log.Println("dingding send text err:", err)
 			}
 		}
