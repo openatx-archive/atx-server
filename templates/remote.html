@@ -61,10 +61,13 @@
             <!-- Nav tabs -->
             <div class="card">
               <ul class="nav nav-tabs" role="tablist">
-                <li role="presentation" class="active"><a href="#home" aria-controls="home" role="tab" data-toggle="tab">TODO</a></li>
-                <li role="presentation"><a href="#logcat" aria-controls="logcat" role="tab" data-toggle="tab">Logcat</a></li>
-                <li role="presentation"><a href="#messages" aria-controls="messages" role="tab" data-toggle="tab">Messages</a></li>
-                <li role="presentation"><a href="#settings" aria-controls="settings" role="tab" data-toggle="tab">Settings</a></li>
+                <li role="presentation" @click="navtabs.active=v.id" :class='{active: v.id == navtabs.active}' v-for="v in navtabs.tabs">
+                  <a :href="'#'+v.id" :aria-controls="v.id" role="tab" data-toggle="tab">{{v.name}}</a>
+                </li>
+                <!-- <li role="presentation"><a href="#logcat" aria-controls="logcat" role="tab" data-toggle="tab">Logcat</a></li> -->
+                <!-- <li role="presentation"><a href="#install" aria-controls="install" role="tab" data-toggle="tab">App install</a></li> -->
+                <!-- <li role="presentation"><a href="#settings" aria-controls="settings" role="tab" data-toggle="tab">Settings</a></li> -->
+                <li role="presentation"><a href="#home" aria-controls="home" role="tab" data-toggle="tab">TODO</a></li>
                 <li class="follow-log" v-bind:style="{'border-color': logcat.follow ? 'green' : 'gray'}" @click="followLog">
                   <span class="hover-content"><i class="glyphicon glyphicon-arrow-down"></i> Scroll to End of Log</span>
                 </li>
@@ -72,7 +75,12 @@
 
               <!-- Tab panes -->
               <div class="tab-content" ref="tab_content" @mousewheel="tabScroll">
-                <div role="tabpanel" class="tab-pane" id="logcat">
+                <tab-item v-on:additem="addTabItem" :active="navtabs.active" name="HOME">
+                  Something !!!
+                  <button @click="fixRotation" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-repeat"></span> 旋转修复</button>
+                </tab-item>
+
+                <tab-item v-on:additem="addTabItem" :active="navtabs.active" name="Logcat">
                   <p>最大保存行数: <input type="number" v-model.number="logcat.maxKeep"></p>
                   <div class="input-group input-group-sm" style="width: 400px">
                     <span class="input-group-addon">Package name</span>
@@ -110,15 +118,24 @@
                       </tr>
                     </tbody>
                   </table>
-                </div>
-                <div role="tabpanel" class="tab-pane active" id="home">
-                  <button @click="fixRotation" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-repeat"></span> 旋转修复</button> 旋转修复功能需要atx-agent的版本 >= 0.1.6
-                </div>
-                <div role="tabpanel" class="tab-pane" id="messages">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen
+                </tab-item>
+
+                <tab-item v-on:additem="addTabItem" :active="navtabs.active" name="App install">
+                  <label>从URL安装</label>
+                  <div style="max-width: 500px" class="input-group">
+                    <input type="text" placeholder="https://..." class="form-control">
+                    <span class="input-group-btn">
+                      <button class="btn btn-default" type="button">Go</button>
+                    </span>
+                  </div>
+                  </p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen
                   book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more
-                  recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.</div>
-                <div role="tabpanel" class="tab-pane" id="settings">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen
-                  book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passage..</div>
+                  recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.</p>
+                </tab-item>
+                <tab-item v-on:additem="addTabItem" :active="navtabs.active" name="Settings">
+                  Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has
+                  survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passage..
+                </tab-item>
               </div>
             </div>
           </div>
@@ -147,13 +164,36 @@
     </div>
   </div>
 </body>
-<script src="//cdn.jsdelivr.net/g/vue@2.1.10,jquery@3.1.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue@2.5.13/dist/vue.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js"></script>
 <script src="//cdn.jsdelivr.net/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 <script src="//cdn.jsdelivr.net/bootstrap.select/1.12.2/js/bootstrap-select.min.js"></script>
 <script src="//cdn.jsdelivr.net/npm/jstree@3.3.4/dist/jstree.min.js"></script>
 <script src="/assets/common.js"></script>
+<script type="text/x-template" id="tab-item-component">
+  <div role="tabpanel" class="tab-pane" :class='{active: active == id}' :id="id">
+    <slot></slot>
+  </div>
+</script>
 <script>
   var deviceIp = "[[.]]";
+
+  Vue.component('tab-item', {
+    template: '#tab-item-component',
+    props: ["name", "active"],
+    computed: {
+      id: function() {
+        return this.name.toLowerCase().replace(" ", "-")
+      }
+    },
+    mounted: function() {
+      var item = {
+        name: this.name,
+        id: this.id,
+      }
+      this.$emit("additem", item);
+    }
+  });
 </script>
 <!-- need set var "deviceIp" before -->
 <script src='[["/assets/remote.js" | urlhash]]'></script>

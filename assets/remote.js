@@ -7,6 +7,10 @@ window.app = new Vue({
       ip: deviceIp,
       port: 7912,
     },
+    navtabs: {
+      active: 'home',
+      tabs: [],
+    },
     error: '',
     control: null,
     loading: false,
@@ -94,6 +98,9 @@ window.app = new Vue({
     }.bind(this), 200)
   },
   methods: {
+    addTabItem: function(item) {
+      this.navtabs.tabs.push(item);
+    },
     fixRotation: function() {
       $.ajax({
         url: this.deviceUrl + "/info/rotation",
