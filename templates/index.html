@@ -49,6 +49,7 @@
         <button @click.prevent="batchLock" class="btn btn-sm btn-default"><i class="fa fa-lock"></i> 锁屏</button>
         <button @click.prevent="batchIdentify('red')" class="btn btn-sm btn-default"><i class="fa fa-location-arrow"></i> 红色</button>
         <button @click.prevent="batchIdentify('black')" class="btn btn-sm btn-default"><i class="fa fa-location-arrow"></i> 黑色</button>
+        <button @click.prevent="batchPower" class="btn btn-sm btn-danger"><i class="fa fa-power-off"></i> 关机</button>
         <button @click.prevent="setProperty" class="btn btn-sm btn-info">资产设置</button>
       </div>
       <div class="form-group">
@@ -296,6 +297,15 @@
           $.ajax({
             url: "/api/v1/batch/unlock",
             method: "post",
+          })
+        },
+        batchPower: function() {
+          $.ajax({
+            url: "/api/v1/batch/shell",
+            method: "post",
+            data: {
+              command: "reboot -p"
+            }
           })
         },
         setProperty: function() {
