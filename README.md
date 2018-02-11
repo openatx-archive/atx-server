@@ -3,6 +3,9 @@
 
 Manage batch of atx-agents
 
+# Testerhome上相关文章
+- [安卓设备集群管理 atx-server](https://testerhome.com/topics/11546) By [codeskyblue](https://testerhome.com/codeskyblue)
+- [atx 安卓集群管理 安装运行及自动化的实践](https://testerhome.com/topics/11588) By [cynic]: (https://testerhome.com/cynic)
 
 # Install
 重要：需要有go语言的基础，知道该如何编译一个go的程序
