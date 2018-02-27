@@ -9,7 +9,7 @@ import (
 
 func deviceQueryToUdid(query string) (udid string, err error) {
 	if strings.HasPrefix(query, "ip:") {
-		infos := db.DeviceFindAll(proto.DeviceInfo{IP: query[3:]})
+		infos := db.DeviceFindAll(proto.DeviceInfo{IP: query[3:], Present: newBool(true)})
 		return extractUdidFromInfos(infos)
 	}
 	return query, nil
