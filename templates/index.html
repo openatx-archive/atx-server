@@ -49,7 +49,7 @@
         <button @click.prevent="batchLock" class="btn btn-sm btn-default"><i class="fa fa-lock"></i> 锁屏</button>
         <button @click.prevent="batchIdentify('red')" class="btn btn-sm btn-default"><i class="fa fa-location-arrow"></i> 红色</button>
         <button @click.prevent="batchIdentify('black')" class="btn btn-sm btn-default"><i class="fa fa-location-arrow"></i> 黑色</button>
-        <button @click.prevent="batchPower" class="btn btn-sm btn-danger"><i class="fa fa-power-off"></i> 关机</button>
+        <!-- <button @click.prevent="batchPower" class="btn btn-sm btn-danger"><i class="fa fa-power-off"></i> 关机</button> -->
         <button @click.prevent="setProperty" class="btn btn-sm btn-info">资产设置</button>
       </div>
       <div class="form-group">
@@ -57,7 +57,7 @@
         <div class="input-group input-group-sm">
           <!-- <div class="input-group-addon">Search</div> -->
           <div class="input-group-addon"><i class="fa fa-search"></i></div>
-          <input type="text" class="form-control">
+          <input type="text" v-model="searchText" class="form-control">
           <div class="input-group-addon" title="设备在线">
             <i class="fa fa-meh-o"></i>
             <strong v-text="onlineCount"></strong>
@@ -82,13 +82,14 @@
         <thead>
           <tr>
             <th>#</th>
-            <th class="hidden-xs">IP</th>
-            <th class="hidden-xs">Serial</th>
-            <th>资产编号</th>
+            <th>@</th>
+            <th class="hidden-xs"><u>IP</u></th>
+            <th class="hidden-xs"><u>Serial</u></th>
+            <th><u>资产编号</u></th>
             <th>名字</th>
-            <th>Brand</th>
+            <th><u>Brand</u></th>
             <th class="hidden">Model</th>
-            <th class="hidden">Version(SDK)</th>
+            <th class="hidden-xs"><u>Version</u>(SDK)</th>
             <th class="hidden">CPU</th>
             <th class="hidden">MAC</th>
             <th class="hidden">Memory</th>
@@ -102,9 +103,15 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="d in devices" :key="d.udid" v-bind:class='{"offline": !d.present}'>
+          <tr v-for="d in filteredDevices" :key="d.udid" v-bind:class='{"offline": !d.present}'>
             <td>
-              <input type="checkbox" :disabled="!d.present" v-model="d.ready" @click="toggleReady(d)">
+              <input type="checkbox" disabled=true>
+            </td>
+            <td>
+              <div @click="d.present && toggleReady(d)">
+                <span v-show="d.ready" class="fa fa-smile-o" v-bind:class='{"color-green": d.present}'></span>
+                <span v-show="!d.ready" class="fa fa-frown-o"></span>
+              </div>
             </td>
             <td class="hidden-xs"><span v-text="d.ip"></span></td>
             <td class="hidden-xs">
@@ -118,11 +125,11 @@
             </td>
             <td v-text="d.brand"></td>
             <td class="hidden" v-text="d.model"></td>
-            <td class="hidden">{{d.version}}({{d.sdk}})</td>
+            <td class="hidden-xs">{{d.version}}({{d.sdk}})</td>
             <td class="hidden"><span v-if="d.cpu">{{d.cpu.hardware.replace('Qualcomm Technologies, Inc', '骁龙')}}</span></td>
             <td class="hidden text-uppercase"><span v-text="d.hwaddr"></span></td>
             <td class="hidden">{{d.memory && d.memory.around}}</td>
-            <td class="hidden-xs" v-text="d.agentVersion"></td>
+            <td class="hidden" v-text="d.agentVersion"></td>
             <td>
               {{d.battery && d.battery.level}}%
               <template v-if="d.present && d.battery">
@@ -148,7 +155,7 @@
             </td>
             <td class="hidden-xs">
               <a target="_blank" :href='"/devices/"+d.udid+"/remote"'><i class="fa fa-eye"></i></a>
-              <a target="_blank" :href='"http://"+d.ip+":7912/remote"'><i class="fa fa-television"></i></a>
+              <!-- <a target="_blank" :href='"http://"+d.ip+":7912/remote"'><i class="fa fa-television"></i></a> -->
               <a target="_blank" :href='"http://"+d.ip+":7912/term"'><i class="fa fa-terminal"></i></a>
             </td>
           </tr>
@@ -162,6 +169,7 @@
       data: {
         devices: [],
         errmsg: "",
+        searchText: "",
       },
       filters: {
         timeSince: function(value) {
@@ -181,15 +189,32 @@
         this.loadWatches()
       },
       computed: {
-        onlineCount: function() {
+        filteredDevices: function() {
+          var searchText = this.searchText.trim();
+          if (!searchText.length) {
+            return this.devices;
+          }
+          var keywords = searchText.split(/\s+/).map(function(key) {
+            return key.toLowerCase()
+          })
           return this.devices.filter(function(d) {
+            return keywords.every(function(key) {
+              // searched properties
+              return [d.propertyId, d.ip, d.serial, d.brand, d.version].some(function(value) {
+                return value && ("" + value).toLowerCase().includes(key)
+              })
+            })
+          })
+        },
+        onlineCount: function() {
+          return this.filteredDevices.filter(function(d) {
             return d.present
           }).length;
-        }
+        },
       },
       methods: {
         count: function(present, ready, using) {
-          return this.devices.filter(function(d) {
+          return this.filteredDevices.filter(function(d) {
             if (present != null && d.present != present) {
               return false;
             }
