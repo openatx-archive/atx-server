@@ -42,7 +42,7 @@
         </p>
       </div>
     </div>
-    <form class="form-inline">
+    <form class="form-inline" v-on:submit.prevent>
       <div class="form-group">
         <strong>批量操作</strong>
         <button @click.prevent="batchUnlock" class="btn btn-sm btn-default"><i class="fa fa-unlock"></i> 解锁</button>
@@ -52,8 +52,9 @@
         <!-- <button @click.prevent="batchPower" class="btn btn-sm btn-danger"><i class="fa fa-power-off"></i> 关机</button> -->
         <button @click.prevent="setProperty" class="btn btn-sm btn-info">资产设置</button>
       </div>
+    </form>
+    <form class="form-inline" v-on:submit.prevent>
       <div class="form-group">
-        <!-- <label>Search</label> -->
         <div class="input-group input-group-sm">
           <!-- <div class="input-group-addon">Search</div> -->
           <div class="input-group-addon"><i class="fa fa-search"></i></div>
@@ -81,12 +82,12 @@
       <table class="table table-hover table-condensed">
         <thead>
           <tr>
-            <th>#</th>
+            <th class="hidden">#</th>
             <th>@</th>
             <th class="hidden-xs"><u>IP</u></th>
             <th class="hidden-xs"><u>Serial</u></th>
             <th><u>资产编号</u></th>
-            <th>名字</th>
+            <th><u>名字</u></th>
             <th><u>Brand</u></th>
             <th class="hidden">Model</th>
             <th class="hidden-xs"><u>Version</u>(SDK)</th>
@@ -104,13 +105,13 @@
         </thead>
         <tbody>
           <tr v-for="d in filteredDevices" :key="d.udid" v-bind:class='{"offline": !d.present}'>
-            <td>
+            <td class="hidden">
               <input type="checkbox" disabled=true>
             </td>
             <td>
               <div @click="d.present && toggleReady(d)">
-                <span v-show="d.ready" class="fa fa-smile-o" v-bind:class='{"color-green": d.present}'></span>
-                <span v-show="!d.ready" class="fa fa-frown-o"></span>
+                <span v-show="d.ready" class="fa fa-check-square" v-bind:class='{"color-green": d.present}'></span>
+                <span v-show="!d.ready" class="fa fa-remove"></span>
               </div>
             </td>
             <td class="hidden-xs"><span v-text="d.ip"></span></td>
@@ -200,7 +201,7 @@
           return this.devices.filter(function(d) {
             return keywords.every(function(key) {
               // searched properties
-              return [d.propertyId, d.ip, d.serial, d.brand, d.version].some(function(value) {
+              return [d.propertyId, d.ip, d.serial, d.brand, d.version, (d.product || {}).name].some(function(value) {
                 return value && ("" + value).toLowerCase().includes(key)
               })
             })
