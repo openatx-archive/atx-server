@@ -68,7 +68,7 @@
                 <!-- <li role="presentation"><a href="#install" aria-controls="install" role="tab" data-toggle="tab">App install</a></li> -->
                 <!-- <li role="presentation"><a href="#settings" aria-controls="settings" role="tab" data-toggle="tab">Settings</a></li> -->
                 <li role="presentation"><a href="#home" aria-controls="home" role="tab" data-toggle="tab">TODO</a></li>
-                <li class="follow-log" v-bind:style="{'border-color': logcat.follow ? 'green' : 'gray'}" @click="followLog">
+                <li v-show='navtabs.active == "logcat"' class="follow-log" v-bind:style="{'border-color': logcat.follow ? 'green' : 'gray'}" @click="followLog">
                   <span class="hover-content"><i class="glyphicon glyphicon-arrow-down"></i> Scroll to End of Log</span>
                 </li>
               </ul>
@@ -76,7 +76,9 @@
               <!-- Tab panes -->
               <div class="tab-content" ref="tab_content" @mousewheel="tabScroll">
                 <tab-item v-on:additem="addTabItem" :active="navtabs.active" name="HOME">
-                  <button @click="fixRotation" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-repeat"></span> 旋转修复</button>
+                  <button @click="fixRotation" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-repeat"></span> 修复旋转</button>
+                  <button @click="fixMinicap" class="btn btn-default btn-sm"><span class="fa fa-legal"></span> 修复minicap</button>
+                  <div style="padding-top: 10px" v-text="fixConsole"></div>
                 </tab-item>
 
                 <tab-item v-on:additem="addTabItem" :active="navtabs.active" name="Logcat">

@@ -7,6 +7,7 @@ window.app = new Vue({
       ip: deviceIp,
       port: 7912,
     },
+    fixConsole: '', // log for fix minicap and rotation
     navtabs: {
       active: 'home',
       tabs: [],
@@ -108,6 +109,28 @@ window.app = new Vue({
       }).then(function(ret) {
         console.log("rotation fixed")
       })
+    },
+    fixMinicap: function() {
+      this.fixConsole = "remove old minicap";
+      $.ajax({
+          method: "post",
+          url: this.deviceUrl + "/shell",
+          data: {
+            command: "rm -f /data/local/tmp/minicap /data/local/tmp/minicap.so"
+          }
+        })
+        .then(function() {
+          this.fixConsole = "download mincap to device ..."
+          return $.ajax({
+            url: this.deviceUrl + "/minicap",
+            method: "put",
+          })
+        }.bind(this))
+        .then(function() {
+          this.fixConsole = "minicap fixed"
+        }.bind(this), function() {
+          this.fixConsole = "minicap can not be fixed, open Browser Console for more detail"
+        }.bind(this))
     },
     tabScroll: function(ev) {
       // var el = ev.target;
