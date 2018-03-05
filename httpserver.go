@@ -3,13 +3,13 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"io"
 	"net/http"
-	"time"
-	"strings"
 	"os"
-	"fmt"
+	"strings"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
@@ -38,10 +38,10 @@ var (
 	funcMap template.FuncMap
 )
 
-func init(){
-	funcMap =  template.FuncMap{
+func init() {
+	funcMap = template.FuncMap{
 		"title": strings.Title,
-		"urlhash": func(s string) string{
+		"urlhash": func(s string) string {
 			path := strings.TrimPrefix(s, "/")
 			info, err := os.Stat(path)
 			if err != nil {
@@ -189,7 +189,8 @@ func newHandler() http.Handler {
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		renderHTML(w, "index.html", nil)
 	})
-	r.Handle("/assets/{(.*)}", http.StripPrefix("/assets/", http.FileServer(http.Dir("./assets"))))
+
+	r.PathPrefix("/assets").Handler(http.StripPrefix("/assets/", http.FileServer(http.Dir("./assets"))))
 	r.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "assets/favicon.ico")
 	})

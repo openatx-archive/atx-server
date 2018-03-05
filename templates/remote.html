@@ -33,7 +33,11 @@
         <a class="navbar-brand" href="#"><b>ATX</b>-<strong>Server</strong></a>
       </div>
       <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-        <p class="navbar-text">{{device.ip}}</p>
+        <p class="navbar-text">{{device.ip}}
+          <a target="_blank" v-bind:href='"http://"+device.ip+":"+device.port+"/term"'>
+            终端
+          </a>
+        </p>
       </div>
     </nav>
     <div id="upper">
@@ -61,13 +65,13 @@
             <!-- Nav tabs -->
             <div class="card">
               <ul class="nav nav-tabs" role="tablist">
-                <li role="presentation" @click="navtabs.active=v.id" :class='{active: v.id == navtabs.active}' v-for="v in navtabs.tabs">
+                <li role="presentation" @click="navtabs.active=v.id; changeTab(v.id)" :class='{active: v.id == navtabs.active}' v-for="v in navtabs.tabs">
                   <a :href="'#'+v.id" :aria-controls="v.id" role="tab" data-toggle="tab">{{v.name}}</a>
                 </li>
                 <!-- <li role="presentation"><a href="#logcat" aria-controls="logcat" role="tab" data-toggle="tab">Logcat</a></li> -->
                 <!-- <li role="presentation"><a href="#install" aria-controls="install" role="tab" data-toggle="tab">App install</a></li> -->
                 <!-- <li role="presentation"><a href="#settings" aria-controls="settings" role="tab" data-toggle="tab">Settings</a></li> -->
-                <li role="presentation"><a href="#home" aria-controls="home" role="tab" data-toggle="tab">TODO</a></li>
+                <!-- <li role="presentation"><a href="#home" aria-controls="home" role="tab" data-toggle="tab">TODO</a></li> -->
                 <li v-show='navtabs.active == "logcat"' class="follow-log" v-bind:style="{'border-color': logcat.follow ? 'green' : 'gray'}" @click="followLog">
                   <span class="hover-content"><i class="glyphicon glyphicon-arrow-down"></i> Scroll to End of Log</span>
                 </li>
@@ -122,20 +126,32 @@
                 </tab-item>
 
                 <tab-item v-on:additem="addTabItem" :active="navtabs.active" name="App install">
-                  <label>从URL安装</label>
+                  <label>从URL安装（todo）</label>
                   <div style="max-width: 500px" class="input-group">
                     <input type="text" placeholder="https://..." class="form-control">
                     <span class="input-group-btn">
                       <button class="btn btn-default" type="button">Go</button>
                     </span>
                   </div>
-                  </p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen
-                  book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more
-                  recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.</p>
+                  </p>
+                  <form v-on:submit.prevent="uploadFile">
+                    <div class="form-group">
+                      <label for="file">Choose file to upload</label>
+                      <input type="file" name="file">
+                      <p class="help-block">file will be uploaded to "/sdcard/tmp/"</p>
+                    </div>
+                    <div>
+                      <button class="btn btn-default btn-sm">Submit</button>
+                    </div>
+                  </form>
+                  </p>
                 </tab-item>
                 <tab-item v-on:additem="addTabItem" :active="navtabs.active" name="Settings">
                   Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has
                   survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passage..
+                </tab-item>
+                <tab-item v-on:additem="addTabItem" :active="navtabs.active" name="Terminal">
+                  TODO
                 </tab-item>
               </div>
             </div>
@@ -170,6 +186,7 @@
 <script src="//cdn.jsdelivr.net/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 <script src="//cdn.jsdelivr.net/bootstrap.select/1.12.2/js/bootstrap-select.min.js"></script>
 <script src="//cdn.jsdelivr.net/npm/jstree@3.3.4/dist/jstree.min.js"></script>
+<script src="/assets/libs/notify.js"></script>
 <script src="/assets/common.js"></script>
 <script type="text/x-template" id="tab-item-component">
   <div role="tabpanel" class="tab-pane" :class='{active: active == id}' :id="id">

@@ -9,7 +9,7 @@ window.app = new Vue({
     },
     fixConsole: '', // log for fix minicap and rotation
     navtabs: {
-      active: 'home',
+      active: location.hash.slice(1) || 'home',
       tabs: [],
     },
     error: '',
@@ -55,6 +55,7 @@ window.app = new Vue({
     var URL = window.URL || window.webkitURL;
     var currentSize = null;
     var self = this;
+    $.notify.defaults({ className: "success" });
 
     this.canvas.bg = document.getElementById('bgCanvas')
     this.canvas.fg = document.getElementById('fgCanvas')
@@ -99,8 +100,29 @@ window.app = new Vue({
     }.bind(this), 200)
   },
   methods: {
+    uploadFile: function(event) {
+      var formData = new FormData(event.target);
+      $(event.target).notify("Uploading ...");
+      $.ajax({
+          method: "post",
+          url: this.deviceUrl + "/upload/sdcard/tmp/",
+          data: formData,
+          processData: false,
+          contentType: false,
+          enctype: 'multipart/form-data',
+        })
+        .then(function(ret) {
+          $(event.target).notify("Upload success");
+        }, function(err) {
+          $(event.target).notify("Upload failed:" + err.responseText, "error")
+          console.error(err)
+        })
+    },
     addTabItem: function(item) {
       this.navtabs.tabs.push(item);
+    },
+    changeTab: function(tabId) {
+      location.hash = tabId;
     },
     fixRotation: function() {
       $.ajax({
@@ -344,7 +366,7 @@ window.app = new Vue({
 
       ws.onmessage = function(message) {
         if (message.data instanceof Blob) {
-          console.log("New image");
+          console.log("image received");
 
           var blob = new Blob([message.data], {
             type: 'image/jpeg'
