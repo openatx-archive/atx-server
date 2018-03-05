@@ -81,7 +81,7 @@
               <div class="tab-content" ref="tab_content" @mousewheel="tabScroll">
                 <tab-item v-on:additem="addTabItem" :active="navtabs.active" name="HOME">
                   <button @click="fixRotation" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-repeat"></span> 修复旋转</button>
-                  <button @click="fixMinicap" class="btn btn-default btn-sm"><span class="fa fa-legal"></span> 修复minicap</button>
+                  <button @click="fixMinicap" class="btn btn-default btn-sm" disabled=true><span class="fa fa-legal"></span> 修复minicap</button>
                   <div style="padding-top: 10px" v-text="fixConsole"></div>
                 </tab-item>
 
