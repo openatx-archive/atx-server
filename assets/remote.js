@@ -31,6 +31,7 @@ window.app = new Vue({
         height: 1
       }
     },
+    browserURL: "",
     logcat: {
       follow: true,
       tagColors: {},
@@ -47,11 +48,11 @@ window.app = new Vue({
   },
   watch: {},
   computed: {
-    deviceUrl: function() {
+    deviceUrl: function () {
       return "http://" + this.device.ip + ":" + this.device.port;
     }
   },
-  mounted: function() {
+  mounted: function () {
     var URL = window.URL || window.webkitURL;
     var currentSize = null;
     var self = this;
@@ -59,11 +60,11 @@ window.app = new Vue({
 
     this.canvas.bg = document.getElementById('bgCanvas')
     this.canvas.fg = document.getElementById('fgCanvas')
-      // this.canvas = c;
+    // this.canvas = c;
     window.c = this.canvas.bg;
     var ctx = c.getContext('2d')
 
-    $(window).resize(function() {
+    $(window).resize(function () {
       self.resizeScreen();
     })
 
@@ -72,7 +73,12 @@ window.app = new Vue({
     this.enableTouch();
     this.loadLiveScreen();
 
-    window.k = setTimeout(function() {
+    // wakeup device on connect
+    setTimeout(function () {
+      this.keyevent("WAKEUP");
+    }.bind(this), 1)
+
+    window.k = setTimeout(function () {
       var lineno = (this.logcat.lineNumber += 1);
       this.logcat.logs.push({
         lineno: lineno,
@@ -92,7 +98,7 @@ window.app = new Vue({
         if (el.scrollTop < logcat.cachedScrollTop) {
           this.logcat.follow = false;
         } else {
-          setTimeout(function() {
+          setTimeout(function () {
             logcat.cachedScrollTop = el.scrollTop = el.scrollHeight - el.clientHeight;
           }, 2);
         }
@@ -100,61 +106,67 @@ window.app = new Vue({
     }.bind(this), 200)
   },
   methods: {
-    uploadFile: function(event) {
+    openBrowser: function (url) {
+      if (!/^https?:\/\//.test(url)) {
+        url = "http://" + url;
+      }
+      return this.shell("am start -a android.intent.action.VIEW -d " + url);
+    },
+    uploadFile: function (event) {
       var formData = new FormData(event.target);
       $(event.target).notify("Uploading ...");
       $.ajax({
-          method: "post",
-          url: this.deviceUrl + "/upload/sdcard/tmp/",
-          data: formData,
-          processData: false,
-          contentType: false,
-          enctype: 'multipart/form-data',
-        })
-        .then(function(ret) {
+        method: "post",
+        url: this.deviceUrl + "/upload/sdcard/tmp/",
+        data: formData,
+        processData: false,
+        contentType: false,
+        enctype: 'multipart/form-data',
+      })
+        .then(function (ret) {
           $(event.target).notify("Upload success");
-        }, function(err) {
+        }, function (err) {
           $(event.target).notify("Upload failed:" + err.responseText, "error")
           console.error(err)
         })
     },
-    addTabItem: function(item) {
+    addTabItem: function (item) {
       this.navtabs.tabs.push(item);
     },
-    changeTab: function(tabId) {
+    changeTab: function (tabId) {
       location.hash = tabId;
     },
-    fixRotation: function() {
+    fixRotation: function () {
       $.ajax({
         url: this.deviceUrl + "/info/rotation",
         method: "post",
-      }).then(function(ret) {
+      }).then(function (ret) {
         console.log("rotation fixed")
       })
     },
-    fixMinicap: function() {
+    fixMinicap: function () {
       this.fixConsole = "remove old minicap";
       $.ajax({
-          method: "post",
-          url: this.deviceUrl + "/shell",
-          data: {
-            command: "rm -f /data/local/tmp/minicap /data/local/tmp/minicap.so"
-          }
-        })
-        .then(function() {
+        method: "post",
+        url: this.deviceUrl + "/shell",
+        data: {
+          command: "rm -f /data/local/tmp/minicap /data/local/tmp/minicap.so"
+        }
+      })
+        .then(function () {
           this.fixConsole = "download mincap to device ..."
           return $.ajax({
             url: this.deviceUrl + "/minicap",
             method: "put",
           })
         }.bind(this))
-        .then(function() {
+        .then(function () {
           this.fixConsole = "minicap fixed"
-        }.bind(this), function() {
+        }.bind(this), function () {
           this.fixConsole = "minicap can not be fixed, open Browser Console for more detail"
         }.bind(this))
     },
-    tabScroll: function(ev) {
+    tabScroll: function (ev) {
       // var el = ev.target;
       // var el = this.$refs.tab_content;
       // var bottom = (el.scrollTop == (el.scrollHeight - el.clientHeight));
@@ -162,21 +174,21 @@ window.app = new Vue({
       // console.log(ev.target.scrollTop, ev.target.scrollHeight, ev.target.clientHeight);
       this.logcat.follow = false;
     },
-    followLog: function() {
+    followLog: function () {
       this.logcat.follow = !this.logcat.follow;
       if (this.logcat.follow) {
         var el = this.$refs.tab_content;
         el.scrollTop = el.scrollHeight - el.clientHeight;
       }
     },
-    logcatTag2Color: function(tag) {
+    logcatTag2Color: function (tag) {
       var color = this.logcat.tagColors[tag];
       if (!color) {
         color = this.logcat.tagColors[tag] = getRandomRgb(5);
       }
       return color;
     },
-    logcatLevel2Color: function(level) {
+    logcatLevel2Color: function (level) {
       switch (level) {
         case "W":
           return "goldenrod";
@@ -188,42 +200,45 @@ window.app = new Vue({
           return "gray";
       }
     },
-    hold: function(msecs) {
+    hold: function (msecs) {
       this.control.touchDown(0, 0.5, 0.5, 5, 0.5)
       this.control.touchCommit();
       this.control.touchWait(msecs);
       this.control.touchUp(0)
       this.control.touchCommit();
     },
-    keyevent: function(meta) {
+    keyevent: function (meta) {
       console.log("keyevent", meta)
-      $.ajax({
+      return this.shell("input keyevent " + meta.toUpperCase());
+    },
+    shell: function (command) {
+      return $.ajax({
         url: this.deviceUrl + "/shell",
         method: "post",
         data: {
-          command: "input keyevent " + meta.toUpperCase(),
+          command: command,
         },
-        success: function(ret) {
+        success: function (ret) {
           console.log(ret);
         },
-        error: function(ret) {
+        error: function (ret) {
           console.log(ret)
         }
       })
     },
-    showError: function(error) {
+    showError: function (error) {
       this.loading = false;
       this.error = error;
       $('.modal').modal('show');
     },
-    showAjaxError: function(ret) {
+    showAjaxError: function (ret) {
       if (ret.responseJSON && ret.responseJSON.description) {
         this.showError(ret.responseJSON.description);
       } else {
         this.showError("<p>Local server not started, start with</p><pre>$ python -m weditor</pre>");
       }
     },
-    initDragDealer: function() {
+    initDragDealer: function () {
       var self = this;
       var updateFunc = null;
 
@@ -239,9 +254,9 @@ window.app = new Vue({
         document.removeEventListener('mouseleave', dragStopListener);
       }
 
-      $('#vertical-gap1').mousedown(function(e) {
+      $('#vertical-gap1').mousedown(function (e) {
         e.preventDefault();
-        updateFunc = function(evt) {
+        updateFunc = function (evt) {
           $("#left").width(evt.clientX);
         }
         document.addEventListener('mousemove', dragMoveListener);
@@ -249,7 +264,7 @@ window.app = new Vue({
         document.addEventListener('mouseleave', dragStopListener)
       });
     },
-    resizeScreen: function(img) {
+    resizeScreen: function (img) {
       // check if need update
       if (img) {
         if (this.lastScreenSize.canvas.width == img.width &&
@@ -273,6 +288,7 @@ window.app = new Vue({
           height: screenDiv.clientHeight,
         }
       }
+
       var canvasAspect = img.width / img.height;
       var screenAspect = screenDiv.clientWidth / screenDiv.clientHeight;
       if (canvasAspect > screenAspect) {
@@ -287,10 +303,10 @@ window.app = new Vue({
         })
       }
     },
-    delayReload: function(msec) {
+    delayReload: function (msec) {
       setTimeout(this.screenDumpUI, msec || 1000);
     },
-    drawBlobImageToScreen: function(blob) {
+    drawBlobImageToScreen: function (blob) {
       // Support jQuery Promise
       var dtd = $.Deferred();
       var bgcanvas = this.canvas.bg,
@@ -301,7 +317,7 @@ window.app = new Vue({
         BLANK_IMG = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==',
         img = this.imagePool.next();
 
-      img.onload = function() {
+      img.onload = function () {
         console.log("image")
         fgcanvas.width = bgcanvas.width = img.width
         fgcanvas.height = bgcanvas.height = img.height
@@ -325,7 +341,7 @@ window.app = new Vue({
         dtd.resolve();
       }
 
-      img.onerror = function() {
+      img.onerror = function () {
         // Happily ignore. I suppose this shouldn't happen, but
         // sometimes it does, presumably when we're loading images
         // too quickly.
@@ -344,7 +360,7 @@ window.app = new Vue({
       img.src = url;
       return dtd;
     },
-    loadLiveScreen: function() {
+    loadLiveScreen: function () {
       var self = this;
       var BLANK_IMG =
         'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
@@ -360,11 +376,11 @@ window.app = new Vue({
       this.screenWS = ws;
       var imagePool = new ImagePool(100);
 
-      ws.onopen = function(ev) {
+      ws.onopen = function (ev) {
         console.log('screen websocket connected')
       };
 
-      ws.onmessage = function(message) {
+      ws.onmessage = function (message) {
         if (message.data instanceof Blob) {
           console.log("image received");
 
@@ -372,7 +388,7 @@ window.app = new Vue({
             type: 'image/jpeg'
           })
           var img = imagePool.next();
-          img.onload = function() {
+          img.onload = function () {
             canvas.width = img.width
             canvas.height = img.height
             ctx.drawImage(img, 0, 0, img.width, img.height);
@@ -393,7 +409,7 @@ window.app = new Vue({
             url = null
           }
 
-          img.onerror = function() {
+          img.onerror = function () {
             // Happily ignore. I suppose this shouldn't happen, but
             // sometimes it does, presumably when we're loading images
             // too quickly.
@@ -420,15 +436,15 @@ window.app = new Vue({
         }
       }
 
-      ws.onclose = function(ev) {
+      ws.onclose = function (ev) {
         console.log("screen websocket closed", ev.code)
       }
 
-      ws.onerror = function(ev) {
+      ws.onerror = function (ev) {
         console.log("screen websocket error")
       }
     },
-    enableTouch: function() {
+    enableTouch: function () {
       /**
        * TOUCH HANDLING
        */
@@ -440,13 +456,13 @@ window.app = new Vue({
       }
 
       var ws = new WebSocket(this.deviceUrl.replace("http:", "ws:") + "/minitouch")
-      ws.onerror = function(ev) {
+      ws.onerror = function (ev) {
         console.log("minitouch websocket error:", ev)
       }
-      ws.onmessage = function(ev) {
+      ws.onmessage = function (ev) {
         console.log("minitouch websocket receive message:", ev.data);
       }
-      ws.onclose = function() {
+      ws.onclose = function () {
         console.log("minitouch websocket closed");
       }
       var control = this.control = MiniTouch.createNew(ws);
@@ -599,7 +615,7 @@ window.app = new Vue({
 
       function mouseWheelDelayTouchUp() {
         clearTimeout(wheelTimer);
-        wheelTimer = setTimeout(function() {
+        wheelTimer = setTimeout(function () {
           fromYP = null;
           control.touchUp(1)
           control.touchCommit();
