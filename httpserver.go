@@ -70,6 +70,11 @@ func newHandler() http.Handler {
 	})
 
 	// 设备远程控制
+	r.HandleFunc("/devices/ip:{ip}/remote", func(w http.ResponseWriter, r *http.Request) {
+		ip := mux.Vars(r)["ip"]
+		renderHTML(w, "remote.html", ip)
+	}).Methods("GET")
+
 	r.HandleFunc("/devices/{udid}/remote", func(w http.ResponseWriter, r *http.Request) {
 		udid := mux.Vars(r)["udid"]
 		info, err := db.DeviceGet(udid)

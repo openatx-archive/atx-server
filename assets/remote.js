@@ -106,6 +106,17 @@ window.app = new Vue({
     }.bind(this), 200)
   },
   methods: {
+    saveScreenshot: function () {
+      $.ajax({
+        url: this.deviceUrl + "/screenshot",
+        cache: false,
+        xhrFields: {
+          responseType: 'blob'
+        },
+      }).then(function (blob) {
+        saveAs(blob, "screenshot.jpg") // saveAs require FileSaver.js
+      })
+    },
     openBrowser: function (url) {
       if (!/^https?:\/\//.test(url)) {
         url = "http://" + url;
