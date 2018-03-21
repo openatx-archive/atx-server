@@ -40,15 +40,26 @@ def resizefit(im, size):  # resize but keep aspect ratio
 
 
 class Image2VideoHandler(tornado.web.RequestHandler):
+    def set_default_headers(self):
+        self.set_header("Access-Control-Allow-Origin", "*")
+        self.set_header("Access-Control-Allow-Headers", "x-requested-with")
+        self.set_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
+
+    def options(self):
+        # no body
+        self.set_status(204)
+        self.finish()
+
     @gen.coroutine
     def post(self):
         filemetas = self.request.files['file']
         tmpdir = pathlib.Path('tmpdir/' + str(uuid.uuid1()))
-        tmpdir.mkdir(parents=True, exist_ok=True)
+        if not tmpdir.is_dir():
+            tmpdir.mkdir(parents=True)
 
         video_file = 'static/video-%s.mp4' % int(time.time() * 1000)
-        video_file = 'video.mp4'
-        writer = imageio.get_writer(video_file, fps=3)
+        # video_file = 'video.mp4'
+        writer = imageio.get_writer(video_file, fps=20)
         try:
             size = ()
             for (i, meta) in enumerate(filemetas):

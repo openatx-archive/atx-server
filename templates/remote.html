@@ -123,15 +123,28 @@
                   <div class="panel panel-default">
                     <div class="panel-heading">快捷操作</div>
                     <div class="panel-body">
-                      打开网址
-                      <div class="input-group">
-                        <input type="text" class="form-control" v-model="browserURL" placeholder="http://.." @keyup.enter="openBrowser(browserURL)">
-                        <span class="input-group-btn">
-                          <button type="button" class="btn btn-default" @click='openBrowser(browserURL)'>Open</button>
-                        </span>
+                      <div>
+                        打开网址
+                        <div class="input-group">
+                          <input type="text" class="form-control" v-model="browserURL" placeholder="http://.." @keyup.enter="openBrowser(browserURL)">
+                          <span class="input-group-btn">
+                            <button type="button" class="btn btn-default" @click='openBrowser(browserURL)'>Open</button>
+                          </span>
+                        </div>
                       </div>
                       <hr>
-                      <button @click="saveScreenshot()" class="btn btn-sm btn-default"><i class="fa fa-image"></i> 截图</button>
+                      <div>
+                        <button @click="saveScreenshot()" class="btn btn-sm btn-default">
+                          <i class="fa fa-image"></i> 截图</button>
+                        <button @click="saveShortVideo" class="btn btn-sm btn-default">
+                          <i class="fa fa-video-camera"></i> 保存最近10s视频 (Beta)</button>
+                      </div>
+                      <div v-show="videoUrl">
+                        <hr>
+                        <video :src="videoUrl" controls=controls style="max-height: 400px">
+                          您的浏览器不支持 video 标签
+                        </video>
+                      </div>
                     </div>
                   </div>
 

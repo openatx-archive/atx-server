@@ -45,6 +45,8 @@ window.app = new Vue({
         content: "loaded /system/lib/egl/libEGL_adreno200.so",
       }]
     },
+    imageBlobBuffer: [],
+    videoUrl: '',
   },
   watch: {},
   computed: {
@@ -106,6 +108,26 @@ window.app = new Vue({
     }.bind(this), 200)
   },
   methods: {
+    saveShortVideo: function (event) {
+      var fd = new FormData();
+      this.imageBlobBuffer.forEach(function (blob) {
+        fd.append('file', blob);
+      });
+      $(event.target).notify("视频后台合成中，请稍候 ...");
+      console.log("upload")
+      $.ajax({
+        type: "post",
+        url: "http://10.246.46.160:7000/img2video", // TODO: 临时地址，需要后期更换
+        processData: false,
+        contentType: false,
+        data: fd,
+        dateType: 'json',
+      }).done(function (data) {
+        console.log(data.url);
+        this.videoUrl = data.url;
+        $(event.target).notify("合成完毕");
+      }.bind(this))
+    },
     saveScreenshot: function () {
       $.ajax({
         url: this.deviceUrl + "/screenshot",
@@ -391,6 +413,9 @@ window.app = new Vue({
         console.log('screen websocket connected')
       };
 
+      var imageBlobBuffer = self.imageBlobBuffer;
+      var imageBlobMaxLength = 300;
+
       ws.onmessage = function (message) {
         if (message.data instanceof Blob) {
           console.log("image received");
@@ -398,6 +423,12 @@ window.app = new Vue({
           var blob = new Blob([message.data], {
             type: 'image/jpeg'
           })
+
+          imageBlobBuffer.push(blob);
+          if (imageBlobBuffer.length > imageBlobMaxLength) {
+            imageBlobBuffer.shift();
+          }
+
           var img = imagePool.next();
           img.onload = function () {
             canvas.width = img.width
