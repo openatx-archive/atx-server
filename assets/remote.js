@@ -1,4 +1,25 @@
 /* Javascript */
+$(function () {
+  $('.btn-copy')
+    .mouseleave(function () {
+      var $element = $(this);
+      $element.tooltip('hide').tooltip('disable');
+    })
+
+  var clipboard = new Clipboard('.btn-copy');
+  clipboard.on('success', function (e) {
+    $(e.trigger)
+      .attr('title', 'Copied')
+      .tooltip('fixTitle')
+      .tooltip('enable')
+      .tooltip('show');
+  })
+
+  $('[data-toggle=tooltip]').tooltip({
+    trigger: 'hover',
+  });
+})
+
 window.app = new Vue({
   el: '#app',
   data: {

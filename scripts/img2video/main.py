@@ -63,7 +63,6 @@ class Image2VideoHandler(tornado.web.RequestHandler):
         try:
             size = ()
             for (i, meta) in enumerate(filemetas):
-                print("Filename:", meta['filename'])
                 jpgfile = tmpdir / ('%d.jpg' % i)
                 with jpgfile.open('wb') as f:
                     f.write(meta['body'])
