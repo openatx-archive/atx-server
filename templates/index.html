@@ -110,8 +110,8 @@
             </td>
             <td>
               <div @click="d.present && toggleReady(d)">
-                <span v-show="d.ready" class="fa fa-check-square" v-bind:class='{"color-green": d.present}'></span>
-                <span v-show="!d.ready" class="fa fa-remove"></span>
+                <span v-show="d.ready" class="fa fa-thumbs-o-up" v-bind:class='{"color-green": d.present}'></span>
+                <span v-show="!d.ready" class="fa fa-thumbs-o-down"></span>
               </div>
             </td>
             <td class="hidden-xs"><span v-text="d.ip"></span></td>
