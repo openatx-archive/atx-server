@@ -6,11 +6,13 @@ import uuid
 import pathlib
 import shutil
 import time
+import io
 
 import numpy as np
 import imageio
 import tornado.ioloop
 import tornado.web
+import tornado.websocket
 from PIL import Image, ImageOps
 from tornado import gen
 from tornado.httpclient import AsyncHTTPClient
@@ -23,6 +25,22 @@ class MainHandler(tornado.web.RequestHandler):
     def get(self):
         yield gen.sleep(.1)
         self.render("index.html")
+
+
+class VideoHandler(tornado.web.RequestHandler):
+    def get(self):
+        content_type = self.request.headers.get('Content-Type')
+        if content_type and 'application/json' in content_type:
+            videopath = pathlib.Path("static/videos")
+            data = []
+            for p in videopath.glob('*.mp4'):
+                data.append({
+                    'name': str(p).replace('\\', '/'),
+                    'mtime': p.stat().st_mtime,
+                })
+            self.write({'data': list(reversed(data))})
+            return
+        self.render("videos.html")
 
 
 def resizefit(im, size):  # resize but keep aspect ratio
@@ -39,7 +57,7 @@ def resizefit(im, size):  # resize but keep aspect ratio
     return im.resize(size)
 
 
-class Image2VideoHandler(tornado.web.RequestHandler):
+class CorsMixin(object):
     def set_default_headers(self):
         self.set_header("Access-Control-Allow-Origin", "*")
         self.set_header("Access-Control-Allow-Headers", "x-requested-with")
@@ -50,6 +68,40 @@ class Image2VideoHandler(tornado.web.RequestHandler):
         self.set_status(204)
         self.finish()
 
+
+class Image2VideoWebsocket(tornado.websocket.WebSocketHandler):
+    def check_origin(self, origin):
+        return True
+
+    def open(self):
+        self.video_path = 'static/videos/ws-tmp-%d.mp4' % int(
+            time.time() * 1000)
+        self.writer = imageio.get_writer(self.video_path, fps=10)
+        self.size = ()
+        print("websocket opened")
+
+    def on_message(self, message):
+        if isinstance(message, bytes):
+            # print("receive image")
+            image = Image.open(io.BytesIO(message))
+            if not self.size:  # always horizontal
+                w, h = self.size = image.size
+                if w < h:
+                    self.size = (h, w)
+            if self.size != image.size:
+                image = resizefit(image, self.size)
+            imarray = np.asarray(image)
+            del image
+            self.writer.append_data(imarray)
+        else:
+            print("receive", message)
+
+    def on_close(self):
+        self.writer.close()
+        print("websocket closed, video genreated", self.video_path)
+
+
+class Image2VideoHandler(CorsMixin, tornado.web.RequestHandler):
     @gen.coroutine
     def post(self):
         filemetas = self.request.files['file']
@@ -70,9 +122,9 @@ class Image2VideoHandler(tornado.web.RequestHandler):
                 if not size:
                     size = imarray.shape[1::-1]  # same as reversed(shape[:2])
                 if size != imarray.shape[1::-1]:
-                    im = Image.fromarray(imarray)
+                    im = Image.fromarray(imarray)  # convert to PIL
                     im = resizefit(im, size)
-                    imarray = np.asarray(im)
+                    imarray = np.asarray(im)  # convert to numpy
                     del im
                 writer.append_data(imarray)
         finally:
@@ -92,7 +144,9 @@ def make_app(**settings):
     settings['login_url'] = '/login'
     return tornado.web.Application([
         (r"/", MainHandler),
+        (r"/videos", VideoHandler),
         (r"/img2video", Image2VideoHandler),
+        (r"/websocket", Image2VideoWebsocket),
     ], **settings)
 
 
