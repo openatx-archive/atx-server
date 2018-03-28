@@ -1,4 +1,6 @@
 # coding: utf-8
+#
+# Py3 only
 from __future__ import print_function
 
 import os
@@ -7,6 +9,7 @@ import pathlib
 import shutil
 import time
 import io
+import json
 
 import numpy as np
 import imageio
@@ -33,11 +36,17 @@ class VideoHandler(tornado.web.RequestHandler):
         if content_type and 'application/json' in content_type:
             videopath = pathlib.Path("static/videos")
             data = []
-            for p in videopath.glob('*.mp4'):
-                data.append({
-                    'name': str(p).replace('\\', '/'),
+            for p in sorted(
+                    videopath.glob('*.mp4'), key=lambda p: p.stat().st_mtime):
+                info = {
+                    'uri': str(p).replace('\\', '/'),
                     'mtime': p.stat().st_mtime,
-                })
+                }
+                meta = pathlib.Path(str(p) + ".json")
+                if meta.exists():
+                    metainfo = json.loads(meta.read_text())
+                    info.update(metainfo)
+                data.append(info)
             self.write({'data': list(reversed(data))})
             return
         self.render("videos.html")
@@ -54,7 +63,7 @@ def resizefit(im, size):  # resize but keep aspect ratio
     else:
         padh = int(oldw / new_ratio - oldh) // 2
         im = ImageOps.expand(im, (0, padh, 0, padh), (0, 255, 255))
-    return im.resize(size)
+    return im.resize(size, Image.ANTIALIAS)
 
 
 class CorsMixin(object):
@@ -74,9 +83,13 @@ class Image2VideoWebsocket(tornado.websocket.WebSocketHandler):
         return True
 
     def open(self):
-        self.video_path = 'static/videos/ws-tmp-%d.mp4' % int(
-            time.time() * 1000)
-        self.writer = imageio.get_writer(self.video_path, fps=10)
+        self.udid = self.get_argument(
+            'udid')  # device udid(unique device identifier)
+        self.name = self.get_argument('name')
+        self.video_path = 'static/videos/%s-%d.mp4' % (self.name,
+                                                       int(time.time() * 1000))
+        self.video_tmp_path = 'tmpdir/ws-%s.mp4' % str(uuid.uuid1())
+        self.writer = imageio.get_writer(self.video_tmp_path, fps=10)
         self.size = ()
         print("websocket opened")
 
@@ -98,6 +111,13 @@ class Image2VideoWebsocket(tornado.websocket.WebSocketHandler):
 
     def on_close(self):
         self.writer.close()
+        os.rename(self.video_tmp_path, self.video_path)
+        with open(self.video_path + '.json', 'wb') as f:
+            f.write(
+                json.dumps({
+                    "udid": self.udid,
+                    "name": self.name
+                }).encode('utf-8'))
         print("websocket closed, video genreated", self.video_path)
 
 
@@ -110,7 +130,6 @@ class Image2VideoHandler(CorsMixin, tornado.web.RequestHandler):
             tmpdir.mkdir(parents=True)
 
         video_file = 'static/video-%s.mp4' % int(time.time() * 1000)
-        # video_file = 'video.mp4'
         writer = imageio.get_writer(video_file, fps=20)
         try:
             size = ()
@@ -145,8 +164,8 @@ def make_app(**settings):
     return tornado.web.Application([
         (r"/", MainHandler),
         (r"/videos", VideoHandler),
+        (r"/video/convert", Image2VideoWebsocket),
         (r"/img2video", Image2VideoHandler),
-        (r"/websocket", Image2VideoWebsocket),
     ], **settings)
 
 

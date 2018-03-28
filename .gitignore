@@ -21,3 +21,5 @@ __pycache__
 
 # vscode
 settings.json
+
+*.mp4.json

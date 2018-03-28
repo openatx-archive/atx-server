@@ -30,6 +30,7 @@ var (
 	addr            = kingpin.Flag("addr", "http server listen address").Default(":8000").String()
 	rdbAddr         = kingpin.Flag("rdbaddr", "rethinkdb address").Default("localhost:28015").String()
 	rdbName         = kingpin.Flag("rdbname", "rethinkdb database name").Default("atxserver").String()
+	videoBackend    = kingpin.Flag("video-backend", "backend service for encoding images to video").Default("http://localhost:7000").String()
 	atxAgentVersion string
 	dingtalkToken   string
 )

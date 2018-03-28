@@ -55,7 +55,7 @@
         </a>
       </div>
       <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-        <p class="navbar-text">{{device.ip}}
+        <p class="navbar-text">{{deviceInfo.model}} {{device.ip}}
           <a target="_blank" v-bind:href='"http://"+device.ip+":"+device.port+"/term"'>
             终端
           </a>
@@ -139,9 +139,9 @@
                         停止录制
                         <i class="fa fa-stop color-blue"></i>
                       </button>
-                      <p class="description">Beta 目前视频录制每秒仅采集2张图片, 播放时5倍速度快放</p>
+                      <p class="description">Beta 目前视频录制每秒仅采集6张图片, 播放时约2倍速度快放</p>
                       <p>
-                        <a target="_blank" href="http://10.240.187.224:7000/videos">
+                        <a target="_blank" href="/videos">
                           <i class="fa fa-external-link"></i>
                           查看所有录制</a>
                       </p>
@@ -327,6 +327,7 @@
 </script>
 <script>
   var deviceIp = "[[.]]";
+  var deviceUdid = "ip:[[.]]"
 
   Vue.component('tab-item', {
     template: '#tab-item-component',

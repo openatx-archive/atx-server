@@ -40,7 +40,7 @@
                 <h3 style="font-family: 'Courier New'">{{!g.date}}</h3>
                 <div class="row">
                     <div class="col-md-2" v-for="v in g.videos">
-                        <videoplayer :src="v.name" :mtime="v.mtime"></videoplayer>
+                        <videoplayer :src="v.uri" :mtime="v.mtime" :udid="v.udid" :name="v.name"></videoplayer>
                     </div>
                 </div>
             </div>
@@ -63,7 +63,7 @@
                 </span>
             </div>
             <p>
-                <strong>锤子 pro</strong>
+                <a target="_blank" :href="controlUrl"><strong v-text="nametext"></strong></a>
                 <br>
                 <small><i v-text="mtimetext">2018/03/25 12:32</i></small>
             </p>
@@ -74,11 +74,17 @@
     // self defined video component
     Vue.component('videoplayer', {
         template: '#video-component',
-        props: ["src", "mtime"],
+        props: ["src", "mtime", "udid", "name"],
         computed: {
             mtimetext: function () {
                 var m = moment.unix(this.mtime)
                 return m.format("GGGG/MM/DD HH:mm:ss")
+            },
+            nametext: function () {
+                return this.name || "unknown";
+            },
+            controlUrl: function () {
+                return location.protocol + "//" + location.host + "/devices/" + this.udid + "/remote"
             }
         },
         data: function () {

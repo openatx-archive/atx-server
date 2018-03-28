@@ -7,10 +7,13 @@ import (
 	"html/template"
 	"io"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"os"
 	"strings"
 	"time"
 
+	"github.com/codeskyblue/websocketproxy"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	accesslog "github.com/mash/go-accesslog"
@@ -90,6 +93,20 @@ func newHandler() http.Handler {
 		udid := mux.Vars(r)["udid"]
 		renderHTML(w, "edit.html", udid)
 	}).Methods("GET")
+
+	// Video-backend starts
+	videoProxyURL, _ := url.Parse(*videoBackend)
+	wsProxyURL, _ := url.Parse(*videoBackend)
+	wsProxyURL.Scheme = "ws"
+
+	videoProxy := httputil.NewSingleHostReverseProxy(videoProxyURL)
+	wsVideoProxy := websocketproxy.NewProxy(wsProxyURL)
+
+	r.Handle("/videos", videoProxy)
+	r.Handle("/video/images2video", videoProxy) // not working with POST proxy
+	r.PathPrefix("/static/videos/").Handler(videoProxy)
+	r.Handle("/video/convert", wsVideoProxy)
+	// End of video-backend
 
 	r.HandleFunc("/products/{brand}/{model}", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)

@@ -20,17 +20,16 @@ $(function () {
   });
 })
 
-VIDEO_SERVER = "http://localhost:7000"
-VIDEO_SERVER = "http://10.246.46.160:7000"
 
 window.app = new Vue({
   el: '#app',
   data: {
-    deviceId: '',
+    deviceUdid: deviceUdid,
     device: {
       ip: deviceIp,
       port: 7912,
     },
+    deviceInfo: {},
     fixConsole: '', // log for fix minicap and rotation
     navtabs: {
       active: location.hash.slice(1) || 'home',
@@ -98,6 +97,14 @@ window.app = new Vue({
 
     this.initDragDealer();
 
+    // get device info
+    $.ajax({
+      url: this.deviceUrl + "/info", // "/devices/" + this.deviceUdid + "/info",
+      dateType: "json"
+    }).then(function (ret) {
+      this.deviceInfo = ret;
+    }.bind(this))
+
     this.enableTouch();
     this.openScreenStream();
 
@@ -137,8 +144,10 @@ window.app = new Vue({
     startVideoRecord: function (event) {
       // This function most relays on python-imageio
       $(event.target).notify("视频录制中, 再次点击停止");
-      var wsURL = VIDEO_SERVER.replace("http:", "ws:") + "/websocket"
-      var ws = new WebSocket(wsURL)
+      var protocol = location.protocol == "http:" ? "ws:" : "wss:";
+      var wsURL = protocol + location.host + "/video/convert"
+      var wsQueries = encodeURI("udid=" + this.deviceUdid) + "&" + encodeURI("name=" + this.deviceInfo.model)
+      var ws = new WebSocket(wsURL + "?" + wsQueries)
 
       var cache = {}
       function receiver(_, data) {
@@ -148,7 +157,7 @@ window.app = new Vue({
         if (cache.last) {
           ws.send(cache.last)
         }
-      }, 500)
+      }, 1000 / 6) // fps: 6
       receiver.ws = ws;
       receiver.key = key;
 
@@ -183,8 +192,7 @@ window.app = new Vue({
       console.log("upload")
       $.ajax({
         type: "post",
-        url: VIDEO_SERVER + "/img2video", // TODO: 临时地址，需要后期更换
-        // url: "http://10.246.46.160:7000/img2video", // TODO: 临时地址，需要后期更换
+        url: "http://10.246.46.160:7000/img2video", // TODO: 临时地址，需要后期更换
         processData: false,
         contentType: false,
         data: fd,
