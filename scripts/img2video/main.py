@@ -44,8 +44,9 @@ class VideoHandler(tornado.web.RequestHandler):
                 }
                 meta = pathlib.Path(str(p) + ".json")
                 if meta.exists():
-                    metainfo = json.loads(meta.read_text())
-                    info.update(metainfo)
+                    with meta.open('rb') as f:  # read_text not exists on py3.4
+                        metainfo = json.loads(f.read().decode('utf-8'))
+                        info.update(metainfo)
                 data.append(info)
             self.write({'data': list(reversed(data))})
             return
