@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Videos</title>
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+</head>
+
+<body>
+    <nav class="navbar navbar-default" style="margin-bottom: 0px">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1"
+                aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">
+                <i class="fa fa-video-camera"></i>
+                <strong>Videos</strong>
+            </a>
+        </div>
+        <!-- <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <form class="navbar-form navbar-left">
+                <button class="btn btn-sm btn-default" @click.prevent="toggleScreen">
+                    <i v-if="screenWS" class="fa fa-eye"></i>
+                    <i v-else class="fa fa-eye-slash"></i>
+                </button>
+            </form>
+        </div> -->
+    </nav>
+    <div id="app">
+        <div class="container-fluid">
+            <div v-for="g in groupedVideos">
+                <h3 style="font-family: 'Courier New'">{{!g.date}}</h3>
+                <div class="row">
+                    <div class="col-md-2" v-for="v in g.videos">
+                        <videoplayer :src="v.uri" :mtime="v.mtime" :udid="v.udid" :name="v.name"></videoplayer>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+<script src="//cdn.jsdelivr.net/npm/vue@2.5.13/dist/vue.js"></script>
+<script src="//cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js"></script>
+<script src="//cdn.jsdelivr.net/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/moment@2.21.0/moment.min.js"></script>
+<script type="text/x-template" id="video-component">
+    <div class="video-container">
+        <div>
+            <div @dblclick="requestFullScreen" style="position: relative">
+                <video ref="video" style="width: 100%; border: 1px solid gray" :src="src"></video>
+                <span style="background: black; position: absolute; right: 10px; bottom: 15px; color: white; font-family: 'Courier New'">
+                    <span ref="currenttime" style="color: yellow"></span>
+                    <span ref="totaltime"></span>
+                </span>
+            </div>
+            <p>
+                <a target="_blank" :href="controlUrl"><strong v-text="nametext"></strong></a>
+                <br>
+                <small><i v-text="mtimetext">2018/03/25 12:32</i></small>
+            </p>
+        </div>
+    </div>
+</script>
+<script>
+    // self defined video component
+    Vue.component('videoplayer', {
+        template: '#video-component',
+        props: ["src", "mtime", "udid", "name"],
+        computed: {
+            mtimetext: function () {
+                var m = moment.unix(this.mtime)
+                return m.format("GGGG/MM/DD HH:mm:ss")
+            },
+            nametext: function () {
+                return this.name || "unknown";
+            },
+            controlUrl: function () {
+                return location.protocol + "//" + location.host + "/devices/" + this.udid + "/remote"
+            }
+        },
+        data: function () {
+            return {
+                videoElement: null
+            }
+        },
+        mounted: function () {
+            var v = this.$refs.video;
+            var t = this.$refs.totaltime;
+            var c = this.$refs.currenttime;
+            // v.play();
+            // video refs: https://www.w3schools.com/tags/ref_av_dom.asp
+            function formatDuration(duration) {
+                var m = moment.duration(duration, 'seconds')
+                if (duration > 3600) {
+                    return moment.utc(m.asMilliseconds()).format("HH:mm:ss");
+                }
+                return moment.utc(m.asMilliseconds()).format("mm:ss");
+            }
+
+            v.addEventListener('mouseover', function () {
+                this.controls = true;
+                t.hidden = true;
+                c.hidden = true;
+            })
+            v.addEventListener('mouseout', function () {
+                this.controls = false;
+                t.hidden = false;
+                c.hidden = false;
+            })
+            v.addEventListener('timeupdate', function () {
+                c.innerText = formatDuration(this.currentTime);
+            })
+            v.addEventListener('canplay', function () {
+                t.innerText = formatDuration(this.duration)
+            })
+            v.addEventListener('click', function () {
+                if (this.paused) {
+                    this.play();
+                } else {
+                    this.pause();
+                }
+            })
+
+            document.addEventListener('keydown', function (e) {
+                // console.log(e.keyCode)
+                var v = document.webkitFullscreenElement
+                if (v && e.keyCode == 32) { // space key pressed
+                    v.paused ? v.play() : v.pause()
+                }
+            })
+        },
+        methods: {
+            requestFullScreen: function () {
+                var v = this.$refs.video;
+                if (!document.webkitFullscreenElement) {
+                    v.webkitRequestFullscreen()
+                } else {
+                    v.webkitExitFullscreen()
+                }
+            }
+        }
+    })
+
+    new Vue({
+        el: "#app",
+        data: {
+            videos: [],
+            groupedVideos: [],
+        },
+        mounted: function () {
+            $.ajax({
+                url: "/videos",
+                method: "get",
+                contentType: "application/json",
+                dataType: "json"
+            }).then(function (ret) {
+                console.log(ret)
+                this.videos = ret.data;
+
+                var maps = {};
+                var groupedVideos = [];
+                // var currentList;
+                ret.data.forEach(function (v) {
+                    var date = moment.unix(v.mtime).format("GGGG/MM/DD");
+                    if (!(date in maps)) {
+                        groupedVideos.push({
+                            date: date,
+                            videos: maps[date] = []
+                        });
+                    }
+                    maps[date].push(v)
+                })
+                this.groupedVideos = groupedVideos;
+                console.log(this.groupedVideos)
+            }.bind(this))
+        }
+    })
+</script>
+
+</html>

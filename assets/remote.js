@@ -1,12 +1,35 @@
 /* Javascript */
+$(function () {
+  $('.btn-copy')
+    .mouseleave(function () {
+      var $element = $(this);
+      $element.tooltip('hide').tooltip('disable');
+    })
+
+  var clipboard = new Clipboard('.btn-copy');
+  clipboard.on('success', function (e) {
+    $(e.trigger)
+      .attr('title', 'Copied')
+      .tooltip('fixTitle')
+      .tooltip('enable')
+      .tooltip('show');
+  })
+
+  $('[data-toggle=tooltip]').tooltip({
+    trigger: 'hover',
+  });
+})
+
+
 window.app = new Vue({
   el: '#app',
   data: {
-    deviceId: '',
+    deviceUdid: deviceUdid,
     device: {
       ip: deviceIp,
       port: 7912,
     },
+    deviceInfo: {},
     fixConsole: '', // log for fix minicap and rotation
     navtabs: {
       active: location.hash.slice(1) || 'home',
@@ -31,6 +54,7 @@ window.app = new Vue({
         height: 1
       }
     },
+    screenWS: null,
     browserURL: "",
     logcat: {
       follow: true,
@@ -45,6 +69,9 @@ window.app = new Vue({
         content: "loaded /system/lib/egl/libEGL_adreno200.so",
       }]
     },
+    imageBlobBuffer: [],
+    videoUrl: '',
+    videoReceiver: null, // sub function to receive image
   },
   watch: {},
   computed: {
@@ -70,8 +97,16 @@ window.app = new Vue({
 
     this.initDragDealer();
 
+    // get device info
+    $.ajax({
+      url: this.deviceUrl + "/info", // "/devices/" + this.deviceUdid + "/info",
+      dateType: "json"
+    }).then(function (ret) {
+      this.deviceInfo = ret;
+    }.bind(this))
+
     this.enableTouch();
-    this.loadLiveScreen();
+    this.openScreenStream();
 
     // wakeup device on connect
     setTimeout(function () {
@@ -106,6 +141,68 @@ window.app = new Vue({
     }.bind(this), 200)
   },
   methods: {
+    startVideoRecord: function (event) {
+      // This function most relays on python-imageio
+      $(event.target).notify("视频录制中, 再次点击停止");
+      var protocol = location.protocol == "http:" ? "ws:" : "wss:";
+      var wsURL = protocol + location.host + "/video/convert"
+      var wsQueries = encodeURI("udid=" + this.deviceUdid) + "&" + encodeURI("name=" + this.deviceInfo.model)
+      var ws = new WebSocket(wsURL + "?" + wsQueries)
+
+      var cache = {}
+      function receiver(_, data) {
+        cache.last = data;
+      }
+      var key = setInterval(function () {
+        if (cache.last) {
+          ws.send(cache.last)
+        }
+      }, 1000 / 6) // fps: 6
+      receiver.ws = ws;
+      receiver.key = key;
+
+      $.subscribe('imagedata', receiver)
+      this.videoReceiver = receiver;
+    },
+    stopVideoRecord: function () {
+      if (this.videoReceiver) {
+        $.unsubscribe("imagedata", this.videoReceiver);
+        this.videoReceiver.ws.close()
+        clearInterval(this.videoReceiver.key);
+        this.videoReceiver = null;
+        $(event.target).notify("视频录制成功");
+      }
+    },
+    toggleScreen: function () {
+      if (this.screenWS) {
+        this.screenWS.close();
+        this.canvasStyle.opacity = 0;
+        this.screenWS = null;
+      } else {
+        this.openScreenStream();
+        this.canvasStyle.opacity = 1;
+      }
+    },
+    saveShortVideo: function (event) {
+      var fd = new FormData();
+      this.imageBlobBuffer.forEach(function (blob) {
+        fd.append('file', blob);
+      });
+      $(event.target).notify("视频后台合成中，请稍候 ...");
+      console.log("upload")
+      $.ajax({
+        type: "post",
+        url: "http://10.246.46.160:7000/img2video", // TODO: 临时地址，需要后期更换
+        processData: false,
+        contentType: false,
+        data: fd,
+        dateType: 'json',
+      }).done(function (data) {
+        console.log(data.url);
+        this.videoUrl = data.url;
+        $(event.target).notify("合成完毕");
+      }.bind(this))
+    },
     saveScreenshot: function () {
       $.ajax({
         url: this.deviceUrl + "/screenshot",
@@ -371,7 +468,7 @@ window.app = new Vue({
       img.src = url;
       return dtd;
     },
-    loadLiveScreen: function () {
+    openScreenStream: function () {
       var self = this;
       var BLANK_IMG =
         'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
@@ -391,13 +488,25 @@ window.app = new Vue({
         console.log('screen websocket connected')
       };
 
+      // FIXME(ssx): use pubsub is better
+      var imageBlobBuffer = self.imageBlobBuffer;
+      var imageBlobMaxLength = 300;
+
       ws.onmessage = function (message) {
         if (message.data instanceof Blob) {
           console.log("image received");
+          $.publish("imagedata", message.data);
 
           var blob = new Blob([message.data], {
             type: 'image/jpeg'
           })
+
+          imageBlobBuffer.push(blob);
+
+          if (imageBlobBuffer.length > imageBlobMaxLength) {
+            imageBlobBuffer.shift();
+          }
+
           var img = imagePool.next();
           img.onload = function () {
             canvas.width = img.width
@@ -449,7 +558,7 @@ window.app = new Vue({
 
       ws.onclose = function (ev) {
         console.log("screen websocket closed", ev.code)
-      }
+      }.bind(this)
 
       ws.onerror = function (ev) {
         console.log("screen websocket error")
@@ -574,24 +683,6 @@ window.app = new Vue({
         deactiveFinger(0);
       }
 
-      // function coord(event) {
-      //   var e = event;
-      //   if (e.originalEvent) {
-      //     e = e.originalEvent
-      //   }
-      //   calculateBounds()
-      //   var x = e.pageX - screen.bounds.x
-      //   var y = e.pageY - screen.bounds.y
-      //   var px = x / screen.bounds.w;
-      //   var py = y / screen.bounds.h;
-      //   return {
-      //     px: px,
-      //     py: py,
-      //     x: Math.floor(px * element.width),
-      //     y: Math.floor(py * element.height),
-      //   }
-      // }
-
       function mouseHoverListener(event) {
         var e = event;
         if (e.originalEvent) {
@@ -676,7 +767,7 @@ window.app = new Vue({
 
       /* bind listeners */
       element.addEventListener('mousedown', mouseDownListener);
-      element.addEventListener('mousemove', mouseHoverListener);
+      // element.addEventListener('mousemove', mouseHoverListener);
       element.addEventListener('mousewheel', mouseWheelListener);
     }
   }

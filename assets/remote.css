@@ -11,6 +11,17 @@
   color: green;
 }
 
+.color-blue {
+  color: blue;
+}
+
+.description {
+  margin-top: 10px;
+  margin-left: 5px;
+  font-size: 0.8em;
+  color: gray;
+}
+
 html,
 body {
   height: 100%;
@@ -86,6 +97,8 @@ section {
   justify-content: center;
   flex: 1;
   background-color: gray;
+  border-top: 1px solid darkgray;
+  border-bottom: 1px solid darkgray;
 }
 
 #footer {

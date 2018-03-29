@@ -49,22 +49,28 @@
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
         </button>
-        <a class="navbar-brand" href="#">
-          <b>ATX</b>-
+        <a class="navbar-brand" href="/">
+          <b>ATX</b> -
           <strong>Server</strong>
         </a>
       </div>
       <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-        <p class="navbar-text">{{device.ip}}
+        <p class="navbar-text">{{deviceInfo.model}} {{device.ip}}
           <a target="_blank" v-bind:href='"http://"+device.ip+":"+device.port+"/term"'>
             终端
           </a>
         </p>
+        <form class="navbar-form navbar-left">
+          <button class="btn btn-sm btn-default" @click.prevent="toggleScreen">
+            <i v-if="screenWS" class="fa fa-eye"></i>
+            <i v-else class="fa fa-eye-slash"></i>
+          </button>
+        </form>
       </div>
     </nav>
     <div id="upper">
       <div id="left">
-        <div class="text-center" style="background-color:dodgerblue; color: white">
+        <div class="text-center" style="background-color:white">
           <!-- notification here -->
         </div>
         <section id="screen">
@@ -76,7 +82,7 @@
         </section>
         <section id="footer">
           <button class="btn" @click="keyevent('power')">
-            <i class="fa fa-power-off"></i> Power</button>
+            <i class="fa fa-power-off color-red"></i> Power</button>
           <button class="btn" @click="keyevent('menu')">
             <i class="glyphicon glyphicon-menu-hamburger"></i> Menu</button>
           <button class="btn" @click="keyevent('home')">
@@ -121,17 +127,63 @@
                   </p>
 
                   <div class="panel panel-default">
+                    <div class="panel-heading">截图 &amp; 录制</div>
+                    <div class="panel-body">
+                      <button @click="saveScreenshot()" class="btn btn-sm btn-default">
+                        <i class="fa fa-image"></i> 截图</button>
+                      <button v-if="!videoReceiver" type="button" class="btn btn-sm btn-default" @click="startVideoRecord">
+                        视频录制
+                        <i class="fa fa-circle color-red"></i>
+                      </button>
+                      <button v-if="videoReceiver" type="button" class="btn btn-sm btn-default" @click="stopVideoRecord">
+                        停止录制
+                        <i class="fa fa-stop color-blue"></i>
+                      </button>
+                      <p class="description">Beta 目前视频录制每秒仅采集6张图片, 播放时约2倍速度快放</p>
+                      <p>
+                        <a target="_blank" href="/videos">
+                          <i class="fa fa-external-link"></i>
+                          查看所有录制</a>
+                      </p>
+                    </div>
+                  </div>
+                  <div class="panel panel-default">
                     <div class="panel-heading">快捷操作</div>
                     <div class="panel-body">
-                      打开网址
-                      <div class="input-group">
-                        <input type="text" class="form-control" v-model="browserURL" placeholder="http://.." @keyup.enter="openBrowser(browserURL)">
-                        <span class="input-group-btn">
-                          <button type="button" class="btn btn-default" @click='openBrowser(browserURL)'>Open</button>
-                        </span>
+                      <div>
+                        <div class="input-group">
+                          <span class="input-group-addon" id="sizing-addon2">
+                            <i class="fa fa-globe"></i>
+                          </span>
+                          <input type="text" class="form-control" v-model="browserURL" placeholder="输入网址 http://.." @keyup.enter="openBrowser(browserURL)">
+                          <span class="input-group-btn">
+                            <button type="button" class="btn btn-default" @click='openBrowser(browserURL)'>快速打开</button>
+                          </span>
+                        </div>
                       </div>
                       <hr>
-                      <button @click="saveScreenshot()" class="btn btn-sm btn-default"><i class="fa fa-image"></i> 截图</button>
+                      <div>
+                        <button @click="saveShortVideo" class="btn btn-sm btn-default">
+                          <i class="fa fa-video-camera"></i> 保存最近~10s视频 (Beta)</button>
+                      </div>
+                      <div v-show="videoUrl" class="text-center">
+                        <hr>
+                        <div class="input-group">
+                          <span class="input-group-addon" id="sizing-addon2">
+                            视频地址
+                          </span>
+                          <input type="text" v-model="videoUrl" class="form-control" disabled>
+                          <span class="input-group-btn">
+                            <button class="btn btn-default btn-copy" type="button" v-bind:data-clipboard-text="videoUrl">
+                              Copy
+                            </button>
+                          </span>
+                        </div>
+                        <br>
+                        <video :src="videoUrl" controls=controls style="max-height: 400px; border: 1px solid gray">
+                          您的浏览器不支持 video 标签
+                        </video>
+                      </div>
                     </div>
                   </div>
 
@@ -222,6 +274,10 @@
                 <tab-item v-on:additem="addTabItem" :active="navtabs.active" tabid="terminal" name="终端">
                   TODO
                 </tab-item>
+                <tab-item v-on:additem="addTabItem" :active="navtabs.active" tabid="aboutus" name="关于我们">
+                  该项目目前在GITHUB上已经开源, 欢迎关注并Star该项目
+                  <a href="https://github.com/openatx/atx-server">https://github.com/openatx/atx-server</a>
+                </tab-item>
               </div>
             </div>
           </div>
@@ -259,7 +315,9 @@
 <script src="//cdn.jsdelivr.net/bootstrap.select/1.12.2/js/bootstrap-select.min.js"></script>
 <script src="//cdn.jsdelivr.net/npm/jstree@3.3.4/dist/jstree.min.js"></script>
 <script src="//cdn.jsdelivr.net/npm/file-saver@1.3.3/FileSaver.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/clipboard@1.5.12/dist/clipboard.min.js"></script>
 <script src="/assets/libs/notify.js"></script>
+<script src="/assets/libs/jquery-tiny-pubsub.js"></script>
 <script src='/assets/libs/dropzone/dropzone.min.js'></script>
 <script src='[["/assets/common.js" | urlhash]]'></script>
 <script type="text/x-template" id="tab-item-component">
@@ -269,6 +327,7 @@
 </script>
 <script>
   var deviceIp = "[[.]]";
+  var deviceUdid = "ip:[[.]]"
 
   Vue.component('tab-item', {
     template: '#tab-item-component',
