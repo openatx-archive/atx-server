@@ -52,6 +52,17 @@ class VideoHandler(tornado.web.RequestHandler):
             return
         self.render("videos.html")
 
+    def delete(self, name):
+        mp4file = pathlib.Path("static/videos/" + name)
+        mp4meta = pathlib.Path("static/videos/" + name + ".json")
+        if mp4meta.exists():
+            mp4meta.unlink()
+        if mp4file.exists():
+            mp4file.unlink()
+            self.write({"success": True})
+        else:
+            self.write({"success": False})
+
 
 def resizefit(im, size):  # resize but keep aspect ratio
     w, h = size
@@ -166,6 +177,7 @@ def make_app(**settings):
     return tornado.web.Application([
         (r"/", MainHandler),
         (r"/videos", VideoHandler),
+        (r"/videos/([^/]+)", VideoHandler),
         (r"/video/convert", Image2VideoWebsocket),
         (r"/img2video", Image2VideoHandler),
     ], **settings)

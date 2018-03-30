@@ -184,8 +184,10 @@ window.app = new Vue({
         cache.last = data;
       }
       var key = setInterval(function () {
-        if (cache.last) {
-          ws.send(cache.last)
+        var lastData = cache.last;
+        cache.last = null;
+        if (lastData) {
+          ws.send(lastData)
         }
       }, 1000 / 6) // fps: 6
       receiver.ws = ws;

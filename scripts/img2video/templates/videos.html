@@ -63,9 +63,10 @@
                 </span>
             </div>
             <p>
+                <button @click="deleteVideo" class="pull-right btn btn-xs btn-danger"><i class="fa fa-trash"></i></button>
                 <a target="_blank" :href="controlUrl"><strong v-text="nametext"></strong></a>
                 <br>
-                <small><i v-text="mtimetext">2018/03/25 12:32</i></small>
+                <small><i v-text="mtimetext"></i></small>
             </p>
         </div>
     </div>
@@ -146,6 +147,19 @@
                 } else {
                     v.webkitExitFullscreen()
                 }
+            },
+            deleteVideo: function () {
+                if (!confirm("Delete?")) {
+                    return;
+                }
+                this.$el.parentNode.removeChild(this.$el)
+                $.ajax({
+                    url: this.src.replace(/^static/, ""), // remove prefix
+                    method: "delete",
+                    dataType: "json",
+                }).then(function (ret) {
+                    console.log(ret)
+                })
             }
         }
     })
