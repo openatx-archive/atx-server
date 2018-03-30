@@ -10,6 +10,7 @@ import shutil
 import time
 import io
 import json
+import traceback
 
 import numpy as np
 import imageio
@@ -108,17 +109,20 @@ class Image2VideoWebsocket(tornado.websocket.WebSocketHandler):
 
     def on_message(self, message):
         if isinstance(message, bytes):
-            # print("receive image")
-            image = Image.open(io.BytesIO(message))
-            if not self.size:  # always horizontal
-                w, h = self.size = image.size
-                if w < h:
-                    self.size = (h, w)
-            if self.size != image.size:
-                image = resizefit(image, self.size)
-            imarray = np.asarray(image)
-            del image
-            self.writer.append_data(imarray)
+            try:
+                image = Image.open(io.BytesIO(message))
+                if not self.size:  # always horizontal
+                    w, h = self.size = image.size
+                    if w < h:
+                        self.size = (h, w)
+                if self.size != image.size:
+                    image = resizefit(image, self.size)
+                imarray = np.asarray(image)
+                del image
+                self.writer.append_data(imarray)
+            except Exception as e:
+                print("Receive image format error")
+                traceback.print_exc()
         else:
             print("receive", message)
 
