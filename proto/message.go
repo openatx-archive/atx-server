@@ -35,20 +35,23 @@ type MemoryInfo struct {
 }
 
 type DeviceInfo struct {
-	Udid         string                `json:"udid,omitempty"`       // Unique device identifier
-	PropertyId   string                `json:"propertyId,omitempty"` // For device managerment, eg: HIH-PHO-1122
-	Version      string                `json:"version,omitempty"`    // ro.build.version.release
-	Serial       string                `json:"serial,omitempty"`     // ro.serialno
-	Brand        string                `json:"brand,omitempty"`      // ro.product.brand
-	Model        string                `json:"model,omitempty"`      // ro.product.model
-	HWAddr       string                `json:"hwaddr,omitempty"`     // persist.sys.wifi.mac
-	IP           string                `json:"ip,omitempty"`
-	Sdk          int                   `json:"sdk,omitempty"`
-	AgentVersion string                `json:"agentVersion,omitempty"`
-	Display      *androidutils.Display `json:"display,omitempty"`
-	Battery      *androidutils.Battery `json:"battery,omitempty"`
-	Memory       *MemoryInfo           `json:"memory,omitempty"` // proc/meminfo
-	Cpu          *CpuInfo              `json:"cpu,omitempty"`    // proc/cpuinfo
+	Udid                   string                `json:"udid,omitempty"`       // Unique device identifier
+	PropertyId             string                `json:"propertyId,omitempty"` // For device managerment, eg: HIH-PHO-1122
+	Version                string                `json:"version,omitempty"`    // ro.build.version.release
+	Serial                 string                `json:"serial,omitempty"`     // ro.serialno
+	Brand                  string                `json:"brand,omitempty"`      // ro.product.brand
+	Model                  string                `json:"model,omitempty"`      // ro.product.model
+	HWAddr                 string                `json:"hwaddr,omitempty"`     // persist.sys.wifi.mac
+	IP                     string                `json:"ip,omitempty"`
+	Port                   int                   `json:"port,omitempty"`
+	ReverseProxyAddr       string                `json:"reverseProxyAddr,omitempty"`
+	ReverseProxyServerAddr string                `json:"reverseProxyServerAddr,omitempty"`
+	Sdk                    int                   `json:"sdk,omitempty"`
+	AgentVersion           string                `json:"agentVersion,omitempty"`
+	Display                *androidutils.Display `json:"display,omitempty"`
+	Battery                *androidutils.Battery `json:"battery,omitempty"`
+	Memory                 *MemoryInfo           `json:"memory,omitempty"` // proc/meminfo
+	Cpu                    *CpuInfo              `json:"cpu,omitempty"`    // proc/cpuinfo
 
 	ConnectionCount   int       `json:"-"` // > 1 happended when phone redial server
 	Reserved          string    `json:"reserved,omitempty"`

@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 
 <head>
@@ -67,7 +68,8 @@
           <div class="input-group-addon">
             <i class="fa fa-search"></i>
           </div>
-          <input type="text" v-model="searchText" class="form-control">
+          <!-- autofocus is not working, wired -->
+          <input type="text" v-model="searchText" class="form-control" autofocus>
           <div class="input-group-addon" title="设备在线">
             <i class="fa fa-meh-o"></i>
             <strong v-text="onlineCount"></strong>

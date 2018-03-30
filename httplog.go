@@ -6,11 +6,14 @@ import (
 	"os"
 	"regexp"
 	"runtime"
+	"strings"
 
 	accesslog "github.com/mash/go-accesslog"
+	isatty "github.com/mattn/go-isatty"
 )
 
 var logger *log.Logger
+var isaTTY = isatty.IsTerminal(os.Stdout.Fd())
 
 func init() {
 	if runtime.GOOS == "windows" {
@@ -30,6 +33,15 @@ func (l HTTPLogger) Log(record accesslog.LogRecord) {
 	if record.Method == "POST" && regexp.MustCompile(`/devices/[^/]+/info`).MatchString(record.Uri) {
 		return
 	}
-	logger.Println(fmt.Sprintf("\b] \033[0;m%d %s %s (%s) %.2fms", record.Status, record.Method, record.Uri, record.Ip,
-		float64(record.ElapsedTime.Nanoseconds()/1000)/1000.0))
+	if strings.HasSuffix(record.Uri, "/heartbeat") {
+		return
+	}
+
+	if isaTTY {
+		logger.Println(fmt.Sprintf("\b] \033[0;m%d %s %s (%s) %.2fms", record.Status, record.Method, record.Uri, record.Ip,
+			float64(record.ElapsedTime.Nanoseconds()/1000)/1000.0))
+	} else {
+		logger.Println(fmt.Sprintf("%d %s %s (%s) %.2fms", record.Status, record.Method, record.Uri, record.Ip,
+			float64(record.ElapsedTime.Nanoseconds()/1000)/1000.0))
+	}
 }

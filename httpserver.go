@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/codeskyblue/heartbeat"
 	"github.com/codeskyblue/websocketproxy"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
@@ -62,11 +63,21 @@ func renderHTML(w http.ResponseWriter, filename string, value interface{}) {
 	// template.Must(template.New(filename).Parse(string(content))).Execute(w, nil)
 }
 
+func renderJSON(w http.ResponseWriter, data interface{}) {
+	js, err := json.Marshal(data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Content-Length", fmt.Sprintf("%d", len(js)))
+	w.Write(js)
+}
+
 func newHandler() http.Handler {
 	r := mux.NewRouter()
 	r.HandleFunc("/version", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		json.NewEncoder(w).Encode(map[string]string{
+		renderJSON(w, map[string]string{
 			"server":    version,
 			"atx-agent": atxAgentVersion,
 		})
@@ -116,8 +127,7 @@ func newHandler() http.Handler {
 			http.Error(w, err.Error(), 500)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		json.NewEncoder(w).Encode(products)
+		renderJSON(w, products)
 	})
 
 	r.HandleFunc("/devices/{udid}/product", func(w http.ResponseWriter, r *http.Request) {
@@ -145,8 +155,7 @@ func newHandler() http.Handler {
 			http.Error(w, err.Error(), http.StatusForbidden)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		renderJSON(w, map[string]interface{}{
 			"success": true,
 		})
 	}).Methods("PUT")
@@ -219,8 +228,7 @@ func newHandler() http.Handler {
 
 	r.HandleFunc("/list", func(w http.ResponseWriter, r *http.Request) {
 		devices := db.DeviceList()
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		json.NewEncoder(w).Encode(devices)
+		renderJSON(w, devices)
 	})
 
 	r.HandleFunc("/devices/{query}/info", func(w http.ResponseWriter, r *http.Request) {
@@ -231,9 +239,8 @@ func newHandler() http.Handler {
 			return
 		}
 		if r.Method == "GET" {
-			w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 			info, _ := db.DeviceGet(udid)
-			json.NewEncoder(w).Encode(info)
+			renderJSON(w, info)
 			return
 		}
 		// POST
@@ -280,7 +287,7 @@ func newHandler() http.Handler {
 	// r.HandleFunc("/devices/:random/reserved", func(w http.ResponseWriter, r *http.Request) {
 	// 	info, _ := hostsManager.Random()
 	// 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	// 	json.NewEncoder(w).Encode(info)
+	// 	renderJSON(w, info)
 	// }).Methods("POST")
 
 	r.HandleFunc("/devices/{query}/reserved", func(w http.ResponseWriter, r *http.Request) {
@@ -330,16 +337,26 @@ func newHandler() http.Handler {
 		}
 
 		command := r.FormValue("command")
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		output, err := runAndroidShell(info.IP, command)
 		if err != nil {
-			json.NewEncoder(w).Encode(map[string]string{
+			renderJSON(w, map[string]string{
 				"error": err.Error(),
 			})
 		} else {
+			w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 			io.WriteString(w, output) // the output is already json
 		}
 	}).Methods("POST")
+
+	// heartbeat for reverse proxies (adb forward device 7912 port)
+	hbs := heartbeat.NewServer("hello kitty", 15*time.Second)
+	hbs.OnConnect = func(identifier string) {
+		log.Println(identifier, "is online")
+	}
+	hbs.OnDisconnect = func(identifier string) {
+		log.Println(identifier, "is offline")
+	}
+	r.Handle("/revproxies/heartbeat", hbs)
 
 	return accesslog.NewLoggingHandler(r, HTTPLogger{})
 }
