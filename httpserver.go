@@ -113,7 +113,7 @@ func newHandler() http.Handler {
 	videoProxy := httputil.NewSingleHostReverseProxy(videoProxyURL)
 	wsVideoProxy := websocketproxy.NewProxy(wsProxyURL)
 
-	r.Handle("/videos", videoProxy)
+	r.PathPrefix("/videos").Handler(videoProxy).Methods("GET", "DELETE")
 	r.Handle("/video/images2video", videoProxy) // not working with POST proxy
 	r.PathPrefix("/static/videos/").Handler(videoProxy)
 	r.Handle("/video/convert", wsVideoProxy)
