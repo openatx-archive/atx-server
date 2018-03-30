@@ -141,14 +141,44 @@ window.app = new Vue({
     }.bind(this), 200)
   },
   methods: {
+    connectImage2VideoWebSocket: function (fps) {
+      var protocol = location.protocol == "http:" ? "ws:" : "wss:";
+      var wsURL = protocol + location.host + "/video/convert"
+      var wsQueries = encodeURI("fps=" + fps) + "&" + encodeURI("udid=" + this.deviceUdid) + "&" + encodeURI("name=" + this.deviceInfo.model)
+      return new WebSocket(wsURL + "?" + wsQueries)
+    },
+    startLowQualityScreenRecord: function (event) {
+      $(event.target).notify("视频录制中, 再次点击停止");
+      var ws = this.connectImage2VideoWebSocket(2)
+
+      console.log(this.deviceUrl)
+      var key = setInterval(function () {
+        $.ajax({
+          url: this.deviceUrl + "/screenshot/0",
+          method: "get",
+          processData: false,
+          cache: false,
+          xhr: function () {
+            var xhr = new XMLHttpRequest();
+            xhr.responseType = "blob"
+            return xhr;
+          },
+          success: function (data) {
+            ws.send(data)
+            console.log("screenshot")
+          }
+        })
+      }.bind(this), 1000)
+
+      this.videoReceiver = {
+        ws: ws,
+        key: key,
+      }
+    },
     startVideoRecord: function (event) {
       // This function most relays on python-imageio
       $(event.target).notify("视频录制中, 再次点击停止");
-      var protocol = location.protocol == "http:" ? "ws:" : "wss:";
-      var wsURL = protocol + location.host + "/video/convert"
-      var wsQueries = encodeURI("udid=" + this.deviceUdid) + "&" + encodeURI("name=" + this.deviceInfo.model)
-      var ws = new WebSocket(wsURL + "?" + wsQueries)
-
+      var ws = this.connectImage2VideoWebSocket(10);
       var cache = {}
       function receiver(_, data) {
         cache.last = data;

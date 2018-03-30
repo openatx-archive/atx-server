@@ -132,14 +132,19 @@
                       <button @click="saveScreenshot()" class="btn btn-sm btn-default">
                         <i class="fa fa-image"></i> 截图</button>
                       <button v-if="!videoReceiver" type="button" class="btn btn-sm btn-default" @click="startVideoRecord">
-                        视频录制
+                        高速录制
                         <i class="fa fa-circle color-red"></i>
                       </button>
+                      <button v-if="!videoReceiver" type="button" class="btn btn-sm btn-default" @click="startLowQualityScreenRecord">
+                        低速录制
+                        <i class="fa fa-circle color-red"></i>
+                      </button>
+                      <!-- <button v-if="!videoReceiver" -->
                       <button v-if="videoReceiver" type="button" class="btn btn-sm btn-default" @click="stopVideoRecord">
                         停止录制
                         <i class="fa fa-stop color-blue"></i>
                       </button>
-                      <p class="description">Beta 目前视频录制每秒仅采集6张图片, 播放时约2倍速度快放</p>
+                      <p class="description">高速录制时需要保持屏幕开启，每秒仅采集6张图片, 播放时约2倍速度快放。低速录制每一秒采集一张图片</p>
                       <p>
                         <a target="_blank" href="/videos">
                           <i class="fa fa-external-link"></i>

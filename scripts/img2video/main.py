@@ -90,7 +90,8 @@ class Image2VideoWebsocket(tornado.websocket.WebSocketHandler):
         self.video_path = 'static/videos/%s-%d.mp4' % (self.name,
                                                        int(time.time() * 1000))
         self.video_tmp_path = 'tmpdir/ws-%s.mp4' % str(uuid.uuid1())
-        self.writer = imageio.get_writer(self.video_tmp_path, fps=10)
+        fps = int(self.get_argument('fps', 10))
+        self.writer = imageio.get_writer(self.video_tmp_path, fps=fps)
         self.size = ()
         print("websocket opened")
 
