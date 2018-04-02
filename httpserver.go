@@ -282,13 +282,44 @@ func newHandler() http.Handler {
 		renderHTML(w, "property.html", info.PropertyId)
 	}).Methods("GET", "POST")
 
-	// TODO
-	// Must put in front of "/devices/{query}/reserved"
-	// r.HandleFunc("/devices/:random/reserved", func(w http.ResponseWriter, r *http.Request) {
-	// 	info, _ := hostsManager.Random()
-	// 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	// 	renderJSON(w, info)
-	// }).Methods("POST")
+	r.HandleFunc("/devices/{query}/reserved", func(w http.ResponseWriter, r *http.Request) {
+		query := mux.Vars(r)["query"]
+		udid, err := deviceQueryToUdid(query)
+		if err != nil {
+			http.Error(w, "Device not found "+err.Error(), http.StatusGone)
+			return
+		}
+		info, err := db.DeviceGet(udid)
+		if err != nil {
+			http.Error(w, "Device get error "+err.Error(), http.StatusGone)
+			return
+		}
+		ws, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		defer ws.Close()
+		if toBool(info.Using) {
+			log.Printf("Device %s is using", udid)
+			return
+		}
+		db.DeviceUpdate(proto.DeviceInfo{
+			Udid:         info.Udid,
+			Using:        newBool(true),
+			UsingBeganAt: time.Now(),
+		})
+		defer db.DeviceUpdate(proto.DeviceInfo{
+			Udid:  udid,
+			Using: newBool(false),
+		})
+		// wait until ws disconnected
+		for {
+			if _, _, err := ws.ReadMessage(); err != nil {
+				return
+			}
+		}
+	}).Methods("GET")
 
 	r.HandleFunc("/devices/{query}/reserved", func(w http.ResponseWriter, r *http.Request) {
 		query := mux.Vars(r)["query"]
@@ -298,6 +329,7 @@ func newHandler() http.Handler {
 			http.Error(w, "Device not found "+err.Error(), http.StatusGone)
 			return
 		}
+		log.Println("HEllo")
 		if r.Method == "POST" {
 			info, err := db.DeviceGet(udid)
 			if err != nil {
@@ -309,8 +341,9 @@ func newHandler() http.Handler {
 				return
 			}
 			db.DeviceUpdate(proto.DeviceInfo{
-				Udid:  info.Udid,
-				Using: newBool(true),
+				Udid:         info.Udid,
+				Using:        newBool(true),
+				UsingBeganAt: time.Now(),
 			})
 			io.WriteString(w, "Success")
 			return

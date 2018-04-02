@@ -57,6 +57,7 @@ type DeviceInfo struct {
 	Reserved          string    `json:"reserved,omitempty"`
 	CreatedAt         time.Time `json:"-" gorethink:"createdAt,omitempty"`
 	PresenceChangedAt time.Time `json:"presenceChangedAt,omitempty"`
+	UsingBeganAt      time.Time `json:"usingBeganAt,omitempty" gorethink:"usingBeganAt,omitempty"`
 
 	Ready   *bool `json:"ready,omitempty"`
 	Present *bool `json:"present,omitempty"`

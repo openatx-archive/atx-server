@@ -66,6 +66,7 @@
             <i v-else class="fa fa-eye-slash"></i>
           </button>
         </form>
+        <p class="navbar-text">标签页关闭，设备自动释放</p>
       </div>
     </nav>
     <div id="upper">
@@ -194,7 +195,7 @@
 
                 </tab-item>
 
-                <tab-item v-on:additem="addTabItem" :active="navtabs.active" name="Logcat">
+                <tab-item v-on:additem="addTabItem" :active="navtabs.active" name="Logcat(TODO)">
                   <p>最大保存行数:
                     <input type="number" v-model.number="logcat.maxKeep">
                   </p>
@@ -239,7 +240,7 @@
                   </table>
                 </tab-item>
 
-                <tab-item v-on:additem="addTabItem" :active="navtabs.active" tabid="explorer" name="文件">
+                <tab-item v-on:additem="addTabItem" :active="navtabs.active" tabid="explorer" name="文件(TODO)">
                   <!-- <label>从URL安装（todo）</label>
                   <div style="max-width: 500px" class="input-group">
                     <input type="text" placeholder="https://..." class="form-control">
@@ -276,12 +277,11 @@
                   remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing
                   Lorem Ipsum passage..
                 </tab-item>
-                <tab-item v-on:additem="addTabItem" :active="navtabs.active" tabid="terminal" name="终端">
+                <tab-item v-on:additem="addTabItem" :active="navtabs.active" tabid="terminal" name="终端(TODO)">
                   TODO
                 </tab-item>
                 <tab-item v-on:additem="addTabItem" :active="navtabs.active" tabid="aboutus" name="关于我们">
-                  该项目目前在GITHUB上已经开源, 欢迎关注并Star该项目
-                  <a href="https://github.com/openatx/atx-server">https://github.com/openatx/atx-server</a>
+                  远程真机项目，如有问题欢迎联系 hzsunshx (网易内部) 499563266 (QQ群)
                 </tab-item>
               </div>
             </div>

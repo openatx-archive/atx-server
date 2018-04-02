@@ -30,12 +30,23 @@
         <span class="icon-bar"></span>
       </button>
       <a class="navbar-brand" href="/">
-        <b>ATX</b>-
+        <b>ATX</b> -
         <strong>Server</strong>
       </a>
     </div>
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
       <p class="navbar-text"></p>
+      <ul class="nav navbar-nav">
+        <li class="active">
+          <a href="/">设备列表
+            <span class="sr-only"></span>
+          </a>
+        </li>
+        <li>
+          <a href="/videos">
+            <i class="fa fa-file-video-o"></i> 视频列表</a>
+        </li>
+      </ul>
     </div>
   </nav>
   <div class="container-fluid">
@@ -69,7 +80,7 @@
             <i class="fa fa-search"></i>
           </div>
           <!-- autofocus is not working, wired -->
-          <input type="text" v-model="searchText" class="form-control" autofocus>
+          <input type="text" v-model="searchText" class="form-control" v-focus>
           <div class="input-group-addon" title="设备在线">
             <i class="fa fa-meh-o"></i>
             <strong v-text="onlineCount"></strong>
@@ -137,9 +148,14 @@
               </div>
             </td>
             <td class="text-center">
-              <a target="_blank" class="btn btn-xs btn-link" :href='"/devices/"+d.udid+"/remote"'>
-                Use
-              </a>
+              <span v-if="!d.present" class="color-yellow">Offline</span>
+              <template v-else>
+                <a v-if="!d.using" target="_blank" class="btn btn-xs btn-link" :href='"/devices/"+d.udid+"/remote"'>
+                  Use
+                </a>
+                <span class="color-red" v-if="d.using" @dblclick="releaseDevice(d.udid)">Busy</span>
+              </template>
+              <span v-text="d.reserved"> </span>
             </td>
             <td class="hidden-xs">
               <span v-text="d.ip"></span>
@@ -206,6 +222,13 @@
         errmsg: "",
         searchText: "",
       },
+      directives: {
+        focus: {
+          inserted: function (el) {
+            el.focus();
+          }
+        }
+      },
       filters: {
         timeSince: function (value) {
           return moment(value).fromNow()
@@ -248,6 +271,12 @@
         },
       },
       methods: {
+        releaseDevice: function (udid) {
+          $.ajax({
+            url: "/devices/" + udid + "/reserved",
+            method: "delete"
+          })
+        },
         count: function (present, ready, using) {
           return this.filteredDevices.filter(function (d) {
             if (present != null && d.present != present) {

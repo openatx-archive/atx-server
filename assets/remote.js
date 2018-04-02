@@ -103,10 +103,14 @@ window.app = new Vue({
       dateType: "json"
     }).then(function (ret) {
       this.deviceInfo = ret;
+      document.title = ret.model;
     }.bind(this))
 
-    this.enableTouch();
-    this.openScreenStream();
+    this.reserveDevice()
+      .then(function () {
+        this.enableTouch();
+        this.openScreenStream();
+      }.bind(this))
 
     // wakeup device on connect
     setTimeout(function () {
@@ -141,6 +145,23 @@ window.app = new Vue({
     }.bind(this), 200)
   },
   methods: {
+    reserveDevice: function () {
+      var dtd = $.Deferred();
+      var ws = new WebSocket("ws://" + location.host + "/devices/" + this.deviceUdid + "/reserved")
+      ws.onmessage = function (message) {
+        console.log("WebSocket receive", message)
+      }
+      ws.onopen = function () {
+        dtd.resolve();
+      }
+      ws.onerror = function (err) {
+        console.log("WebSocket Error " + err)
+      }
+      ws.onclose = function () {
+        dtd.reject();
+      }
+      return dtd.promise();
+    },
     connectImage2VideoWebSocket: function (fps) {
       var protocol = location.protocol == "http:" ? "ws:" : "wss:";
       var wsURL = protocol + location.host + "/video/convert"
