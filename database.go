@@ -35,6 +35,7 @@ func initDB(address, dbName string) {
 	if err := db.DBCreateAnyway(dbName); err != nil {
 		panic(err)
 	}
+	log.Println("create tables")
 	if err := db.TableCreateAnyway("devices", r.TableCreateOpts{
 		PrimaryKey: "udid",
 	}); err != nil {

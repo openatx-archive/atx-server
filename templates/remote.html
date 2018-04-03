@@ -66,7 +66,8 @@
             <i v-else class="fa fa-eye-slash"></i>
           </button>
         </form>
-        <p class="navbar-text">标签页关闭，设备自动释放</p>
+        <p class="navbar-text">
+          <a href="javascript:window.close()">标签页关闭</a>，设备自动释放</p>
       </div>
     </nav>
     <div id="upper">
@@ -128,6 +129,26 @@
                   </p>
 
                   <div class="panel panel-default">
+                    <div class="panel-heading">
+                      <i class="fa fa-android"></i> 软件安装</div>
+                    <div class="panel-body">
+                      <div>
+                        <div class="input-group">
+                          <span class="input-group-addon" id="sizing-addon2">
+                            <i class="fa fa-globe"></i>
+                          </span>
+                          <input type="text" class="form-control" v-model="browserURL" placeholder="输入安装包地址 http://.." @keyup.enter="openBrowser(browserURL)">
+                          <span class="input-group-btn">
+                            <button type="button" class="btn btn-default" @click='openBrowser(browserURL)'>下载</button>
+                          </span>
+                        </div>
+                        <p class="description">下载完成后需手动安装</p>
+                      </div>
+
+                    </div>
+                  </div>
+
+                  <div class="panel panel-default">
                     <div class="panel-heading">截图 &amp; 录制</div>
                     <div class="panel-body">
                       <button @click="saveScreenshot()" class="btn btn-sm btn-default">
@@ -151,47 +172,34 @@
                           <i class="fa fa-external-link"></i>
                           查看所有录制</a>
                       </p>
-                    </div>
-                  </div>
-                  <div class="panel panel-default">
-                    <div class="panel-heading">快捷操作</div>
-                    <div class="panel-body">
                       <div>
-                        <div class="input-group">
-                          <span class="input-group-addon" id="sizing-addon2">
-                            <i class="fa fa-globe"></i>
-                          </span>
-                          <input type="text" class="form-control" v-model="browserURL" placeholder="输入网址 http://.." @keyup.enter="openBrowser(browserURL)">
-                          <span class="input-group-btn">
-                            <button type="button" class="btn btn-default" @click='openBrowser(browserURL)'>快速打开</button>
-                          </span>
-                        </div>
-                      </div>
-                      <hr>
-                      <div>
-                        <button @click="saveShortVideo" class="btn btn-sm btn-default">
-                          <i class="fa fa-video-camera"></i> 保存最近~10s视频 (Beta)</button>
-                      </div>
-                      <div v-show="videoUrl" class="text-center">
                         <hr>
-                        <div class="input-group">
-                          <span class="input-group-addon" id="sizing-addon2">
-                            视频地址
-                          </span>
-                          <input type="text" v-model="videoUrl" class="form-control" disabled>
-                          <span class="input-group-btn">
-                            <button class="btn btn-default btn-copy" type="button" v-bind:data-clipboard-text="videoUrl">
-                              Copy
-                            </button>
-                          </span>
+                        <div>
+                          <button @click="saveShortVideo" class="btn btn-sm btn-default">
+                            <i class="fa fa-video-camera"></i> 保存最近~10s视频 (Beta)</button>
                         </div>
-                        <br>
-                        <video :src="videoUrl" controls=controls style="max-height: 400px; border: 1px solid gray">
-                          您的浏览器不支持 video 标签
-                        </video>
+                        <div v-show="videoUrl" class="text-center">
+                          <hr>
+                          <div class="input-group">
+                            <span class="input-group-addon" id="sizing-addon2">
+                              视频地址
+                            </span>
+                            <input type="text" v-model="videoUrl" class="form-control" disabled>
+                            <span class="input-group-btn">
+                              <button class="btn btn-default btn-copy" type="button" v-bind:data-clipboard-text="videoUrl">
+                                Copy
+                              </button>
+                            </span>
+                          </div>
+                          <br>
+                          <video :src="videoUrl" controls=controls style="max-height: 400px; border: 1px solid gray">
+                            您的浏览器不支持 video 标签
+                          </video>
+                        </div>
                       </div>
                     </div>
                   </div>
+
 
                 </tab-item>
 

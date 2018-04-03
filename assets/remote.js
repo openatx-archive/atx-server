@@ -166,56 +166,74 @@ window.app = new Vue({
       var protocol = location.protocol == "http:" ? "ws:" : "wss:";
       var wsURL = protocol + location.host + "/video/convert"
       var wsQueries = encodeURI("fps=" + fps) + "&" + encodeURI("udid=" + this.deviceUdid) + "&" + encodeURI("name=" + this.deviceInfo.model)
-      return new WebSocket(wsURL + "?" + wsQueries)
+      var ws = new WebSocket(wsURL + "?" + wsQueries)
+      var def = $.Deferred()
+      ws.onopen = function () {
+        def.resolve(this)
+      }
+      ws.onclose = function (ev) {
+        def.reject("Somehow ws disconnected")
+      }
+      return def.promise();
     },
     startLowQualityScreenRecord: function (event) {
-      $(event.target).notify("视频录制中, 再次点击停止");
+      $(event.target).notify("初始化中 ...");
       var ws = this.connectImage2VideoWebSocket(2)
-
-      console.log(this.deviceUrl)
-      var key = setInterval(function () {
-        $.ajax({
-          url: this.deviceUrl + "/screenshot/0",
-          method: "get",
-          processData: false,
-          cache: false,
-          xhr: function () {
-            var xhr = new XMLHttpRequest();
-            xhr.responseType = "blob"
-            return xhr;
-          },
-          success: function (data) {
-            ws.send(data)
-            console.log("screenshot")
+      this.connectImage2VideoWebSocket(2)
+        .done(function (ws) {
+          $(event.target).notify("视频录制中, 再次点击停止");
+          console.log(this.deviceUrl)
+          var key = setInterval(function () {
+            $.ajax({
+              url: this.deviceUrl + "/screenshot/0",
+              method: "get",
+              processData: false,
+              cache: false,
+              xhr: function () {
+                var xhr = new XMLHttpRequest();
+                xhr.responseType = "blob"
+                return xhr;
+              },
+              success: function (data) {
+                ws.send(data)
+                console.log("screenshot")
+              }
+            })
+          }.bind(this), 1000)
+          this.videoReceiver = {
+            ws: ws,
+            key: key,
           }
+        }.bind(this))
+        .fail(function (err) {
+          $(event.target).notify("录制启动失败, 请点击【关于我们】，联系网站管理员", "error");
         })
-      }.bind(this), 1000)
-
-      this.videoReceiver = {
-        ws: ws,
-        key: key,
-      }
     },
     startVideoRecord: function (event) {
-      // This function most relays on python-imageio
-      $(event.target).notify("视频录制中, 再次点击停止");
-      var ws = this.connectImage2VideoWebSocket(10);
-      var cache = {}
-      function receiver(_, data) {
-        cache.last = data;
-      }
-      var key = setInterval(function () {
-        var lastData = cache.last;
-        cache.last = null;
-        if (lastData) {
-          ws.send(lastData)
-        }
-      }, 1000 / 6) // fps: 6
-      receiver.ws = ws;
-      receiver.key = key;
+      $(event.target).notify("初始化中 ...");
+      this.connectImage2VideoWebSocket(10)
+        .done(function (ws) {
+          $(event.target).notify("视频录制中, 再次点击停止");
+          var cache = {}
+          function receiver(_, data) {
+            cache.last = data;
+          }
+          var key = setInterval(function () {
+            var lastData = cache.last;
+            cache.last = null;
+            if (lastData) {
+              ws.send(lastData)
+            }
+          }, 1000 / 6) // fps: 6
+          receiver.ws = ws;
+          receiver.key = key;
 
-      $.subscribe('imagedata', receiver)
-      this.videoReceiver = receiver;
+          $.subscribe('imagedata', receiver)
+          this.videoReceiver = receiver;
+        }.bind(this))
+        .fail(function (err) {
+          $(event.target).notify("录制启动失败, 请点击【关于我们】，联系网站管理员", "error");
+        })
     },
     stopVideoRecord: function () {
       if (this.videoReceiver) {

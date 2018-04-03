@@ -57,7 +57,7 @@
         </p>
       </div>
     </div>
-    <form class="form-inline" v-on:submit.prevent>
+    <form class="form-inline hidden" v-on:submit.prevent>
       <div class="form-group">
         <strong>批量操作</strong>
         <button @click.prevent="batchUnlock" class="btn btn-sm btn-default">
@@ -76,11 +76,7 @@
       <div class="form-group">
         <div class="input-group input-group-sm">
           <!-- <div class="input-group-addon">Search</div> -->
-          <div class="input-group-addon">
-            <i class="fa fa-search"></i>
-          </div>
           <!-- autofocus is not working, wired -->
-          <input type="text" v-model="searchText" class="form-control" v-focus>
           <div class="input-group-addon" title="设备在线">
             <i class="fa fa-meh-o"></i>
             <strong v-text="onlineCount"></strong>
@@ -96,6 +92,10 @@
           <div class="input-group-addon" title="离线设备">
             <i class="fa fa-snowflake-o"></i>
             <strong v-text="count(false, null, null)"></strong>
+          </div>
+          <input type="text" v-model="searchText" placeholder="搜索" class="form-control" v-focus>
+          <div class="input-group-addon">
+            <i class="fa fa-search"></i>
           </div>
         </div>
       </div>
