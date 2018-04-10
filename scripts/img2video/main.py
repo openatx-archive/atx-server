@@ -128,7 +128,7 @@ class Image2VideoWebsocket(tornado.websocket.WebSocketHandler):
 
     def on_close(self):
         self.writer.close()
-        os.rename(self.video_tmp_path, self.video_path)
+        shutil.move(self.video_tmp_path, self.video_path)
         with open(self.video_path + '.json', 'wb') as f:
             f.write(
                 json.dumps({
