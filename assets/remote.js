@@ -72,6 +72,8 @@ window.app = new Vue({
     imageBlobBuffer: [],
     videoUrl: '',
     videoReceiver: null, // sub function to receive image
+    inputText: '',
+    inputWS: null,
   },
   watch: {},
   computed: {
@@ -143,8 +145,29 @@ window.app = new Vue({
         }
       }
     }.bind(this), 200)
+
+    this.inputWS = new WebSocket("ws://" + this.device.ip + ":" + this.device.port + "/whatsinput");
+    this.inputWS.onmessage = function (message) {
+      // console.log(message)
+      var data = JSON.parse(message.data)
+      if (data.type == "InputStart") {
+        this.inputText = data.text;
+      } else {
+        console.log(data)
+      }
+    }.bind(this);
+
+  },
+  watch: {
+    inputText: function (newText) {
+      console.log(newText);
+      this.inputWS.send(JSON.stringify({ type: "InputEdit", text: newText }))
+    }
   },
   methods: {
+    onInputChange: function () {
+      console.log(this.inputText);
+    },
     reserveDevice: function () {
       var dtd = $.Deferred();
       var ws = new WebSocket("ws://" + location.host + "/devices/" + this.deviceUdid + "/reserved")
@@ -182,10 +205,9 @@ window.app = new Vue({
       this.connectImage2VideoWebSocket(2)
         .done(function (ws) {
           $(event.target).notify("视频录制中, 再次点击停止");
-          console.log(this.deviceUrl)
           var key = setInterval(function () {
             $.ajax({
-              url: this.deviceUrl + "/screenshot/0",
+              url: this.deviceUrl + "/screenshot/0?thumbnail=800x800",
               method: "get",
               processData: false,
               cache: false,

@@ -44,7 +44,7 @@
         </li>
         <li>
           <a href="/videos">
-            <i class="fa fa-file-video-o"></i> 视频列表</a>
+            <i class="fa fa-film"></i> 视频列表</a>
         </li>
       </ul>
     </div>
@@ -153,7 +153,7 @@
                 <a v-if="!d.using" target="_blank" class="btn btn-xs btn-link" :href='"/devices/"+d.udid+"/remote"'>
                   Use
                 </a>
-                <span class="color-red" v-if="d.using" @dblclick="releaseDevice(d.udid)">Busy</span>
+                <span class="color-red" v-if="d.using" @dblclick.alt="releaseDevice(d.udid)">Busy</span>
               </template>
               <span v-text="d.reserved"> </span>
             </td>

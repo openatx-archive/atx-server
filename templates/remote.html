@@ -130,6 +130,17 @@
 
                   <div class="panel panel-default">
                     <div class="panel-heading">
+                      <i class="fa fa-font"></i> 快捷输入(开发中)</div>
+                    <div class="panel-body">
+                      <textarea class="form-control" v-model="inputText"></textarea>
+                      <p class="description">
+                        <strong>Shift+Enter</strong> to start a new line,
+                        <strong>Enter</strong> to send</p>
+                    </div>
+                  </div>
+
+                  <div class="panel panel-default">
+                    <div class="panel-heading">
                       <i class="fa fa-android"></i> 软件安装</div>
                     <div class="panel-body">
                       <div>
@@ -142,7 +153,7 @@
                             <button type="button" class="btn btn-default" @click='openBrowser(browserURL)'>下载</button>
                           </span>
                         </div>
-                        <p class="description">下载完成后需手动安装</p>
+                        <p class="description">打开浏览器下载，下载完成后需手动安装</p>
                       </div>
 
                     </div>
@@ -199,7 +210,6 @@
                       </div>
                     </div>
                   </div>
-
 
                 </tab-item>
 
