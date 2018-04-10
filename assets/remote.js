@@ -165,9 +165,6 @@ window.app = new Vue({
     }
   },
   methods: {
-    onInputChange: function () {
-      console.log(this.inputText);
-    },
     reserveDevice: function () {
       var dtd = $.Deferred();
       var ws = new WebSocket("ws://" + location.host + "/devices/" + this.deviceUdid + "/reserved")
@@ -201,7 +198,6 @@ window.app = new Vue({
     },
     startLowQualityScreenRecord: function (event) {
       $(event.target).notify("初始化中 ...");
-      var ws = this.connectImage2VideoWebSocket(2)
       this.connectImage2VideoWebSocket(2)
         .done(function (ws) {
           $(event.target).notify("视频录制中, 再次点击停止");
