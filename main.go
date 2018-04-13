@@ -83,6 +83,7 @@ func echo(w http.ResponseWriter, r *http.Request) {
 		around := int(math.Ceil(float64(devInfo.Memory.Total-512*1024) / 1024.0 / 1024.0)) // around
 		devInfo.Memory.Around = fmt.Sprintf("%d GB", around)
 	}
+
 	db.UpdateOrInsertDevice(*devInfo)
 	defer func() {
 		db.SetDeviceAbsent(devInfo.Udid)

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -383,13 +384,30 @@ func newHandler() http.Handler {
 
 	// heartbeat for reverse proxies (adb forward device 7912 port)
 	hbs := heartbeat.NewServer("hello kitty", 15*time.Second)
-	hbs.OnConnect = func(identifier string) {
+	hbs.OnConnect = func(identifier string, r *http.Request) {
+		host, _, _ := net.SplitHostPort(r.RemoteAddr)
+		db.UpdateOrInsertDevice(proto.DeviceInfo{
+			Udid: identifier,
+			IP:   host,
+		})
 		log.Println(identifier, "is online")
 	}
+
+	// Called when client ip changes
+	hbs.OnReconnect = func(identifier string, r *http.Request) {
+		host, _, _ := net.SplitHostPort(r.RemoteAddr)
+		db.UpdateOrInsertDevice(proto.DeviceInfo{
+			Udid: identifier,
+			IP:   host,
+		})
+		log.Println(identifier, "is reconnected")
+	}
+
 	hbs.OnDisconnect = func(identifier string) {
+		db.SetDeviceAbsent(identifier)
 		log.Println(identifier, "is offline")
 	}
-	r.Handle("/revproxies/heartbeat", hbs)
+	r.Handle("/heartbeat", hbs)
 
 	return accesslog.NewLoggingHandler(r, HTTPLogger{})
 }
