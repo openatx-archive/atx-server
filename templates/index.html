@@ -77,15 +77,15 @@
         <div class="input-group input-group-sm">
           <!-- <div class="input-group-addon">Search</div> -->
           <!-- autofocus is not working, wired -->
-          <div class="input-group-addon" title="设备在线">
+          <div class="input-group-addon" title="在线设备">
             <i class="fa fa-meh-o"></i>
             <strong v-text="onlineCount"></strong>
           </div>
-          <div class="input-group-addon" title="可以使用">
+          <div class="input-group-addon" title="已标记设备">
             <i class="fa fa-smile-o"></i>
             <strong v-text="count(true, true, null)"></strong>
           </div>
-          <div class="input-group-addon" title="在线但不能使用">
+          <div class="input-group-addon" title="未标记设备">
             <i class="fa fa-frown-o"></i>
             <strong v-text="count(true, false, null)"></strong>
           </div>
