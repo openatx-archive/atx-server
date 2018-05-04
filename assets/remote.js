@@ -171,6 +171,9 @@ window.app = new Vue({
       ws.onmessage = function (message) {
         console.log("WebSocket receive", message)
       }
+      var key = setInterval(function () {
+        ws.send("ping")
+      }, 5000);
       ws.onopen = function () {
         dtd.resolve();
       }
@@ -179,6 +182,8 @@ window.app = new Vue({
       }
       ws.onclose = function () {
         dtd.reject();
+        clearInterval(key);
+        console.log("websocket reserved closed");
       }
       return dtd.promise();
     },
