@@ -15,13 +15,13 @@ import (
 	"time"
 
 	"github.com/codeskyblue/heartbeat"
+	"github.com/codeskyblue/realip"
 	"github.com/codeskyblue/websocketproxy"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	accesslog "github.com/mash/go-accesslog"
 	"github.com/openatx/atx-server/proto"
 	log "github.com/sirupsen/logrus"
-	"github.com/tomasen/realip"
 )
 
 var (
@@ -395,7 +395,7 @@ func newHandler() http.Handler {
 
 	// Called when client ip changes
 	hbs.OnReconnect = func(identifier string, r *http.Request) {
-		host, _, _ := net.SplitHostPort(r.RemoteAddr)
+		host := realip.FromRequest(r)
 		db.UpdateOrInsertDevice(proto.DeviceInfo{
 			Udid: identifier,
 			IP:   host,
