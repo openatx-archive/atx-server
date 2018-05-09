@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -385,7 +384,7 @@ func newHandler() http.Handler {
 	// heartbeat for reverse proxies (adb forward device 7912 port)
 	hbs := heartbeat.NewServer("hello kitty", 15*time.Second)
 	hbs.OnConnect = func(identifier string, r *http.Request) {
-		host, _, _ := net.SplitHostPort(r.RemoteAddr)
+		host := realip.FromRequest(r)
 		db.UpdateOrInsertDevice(proto.DeviceInfo{
 			Udid: identifier,
 			IP:   host,
