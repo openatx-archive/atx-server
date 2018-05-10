@@ -121,7 +121,7 @@
             <th>
               <u>名字</u>
             </th>
-            <th>
+            <th class="hidden-xs">
               <u>Brand</u>
             </th>
             <th class="hidden">Model</th>
@@ -130,11 +130,11 @@
             <th class="hidden">CPU</th>
             <th class="hidden">MAC</th>
             <th class="hidden">Memory</th>
-            <th class="hidden-xs">Agent</th>
+            <th>Agent</th>
             <th class="hidden-xs">电量</th>
-            <th>状态</th>
+            <th class="hidden-xs">状态</th>
             <th class="hidden-xs">上线时间</th>
-            <th>更多</th>
+            <th class="hidden-xs">更多</th>
             <!-- <th class="hidden-xs">Other</th> -->
           </tr>
         </thead>
@@ -171,7 +171,7 @@
               <span v-text="(d.product || {}).name"></span>
               <a :href="'/devices/'+d.udid+'/edit'" class="fa fa-edit"></a>
             </td>
-            <td v-text="d.brand"></td>
+            <td class="hidden-xs" v-text="d.brand"></td>
             <td class="hidden" v-text="d.model"></td>
             <td class="hidden-xs">{{d.version}}({{d.sdk}})</td>
             <td class="hidden">
@@ -181,7 +181,12 @@
               <span v-text="d.hwaddr"></span>
             </td>
             <td class="hidden">{{d.memory && d.memory.around}}</td>
-            <td class="hidden-xs" v-text="d.agentVersion"></td>
+            <td>
+              <span style="cursor: pointer" @click="d.present && identify(d)">
+                <i class="fa fa-location-arrow" :class="{'fa-spin': d.identifying}"></i>
+                {{d.agentVersion}}
+              </span>
+            </td>
             <td class="hidden-xs">
               {{d.battery && d.battery.level}}%
               <template v-if="d.present && d.battery">
@@ -189,7 +194,7 @@
                 <i class="hidden-xs fa-fix-height fa" v-else :class='"fa-battery-" + Math.floor(d.battery.level/25)'></i>
               </template>
             </td>
-            <td>
+            <td class="hidden-xs">
               <template v-if="d.using">
                 <span @dblclick="release(d)">
                   <i class="color-busy fa-fix-height fa fa-wheelchair-alt"></i>
@@ -202,14 +207,11 @@
             <td class="hidden-xs">
               {{d.presenceChangedAt | timeSince}}
             </td>
-            <td>
+            <td class="hidden-xs">
               <!-- <a target="_blank" :href='"http://"+d.ip+":7912/remote"'><i class="fa fa-television"></i></a> -->
               <a class="hidden-xs" target="_blank" :href='"http://"+d.ip+":7912/term"'>
                 <i class="fa fa-terminal"></i>
               </a>
-              <button title="定位" :disabled="!d.present" @click="identify(d)" class="btn btn-sm btn-link">
-                <i class="fa fa-location-arrow" v-bind:class="{'fa-spin': d.identifying}"></i>
-              </button>
               <button class="hidden-xs btn btn-link btn-copy btn-xs" :data-clipboard-text="d.udid">
                 <i class="fa fa-clipboard" alt="Copy to clipboard"></i>
               </button>
