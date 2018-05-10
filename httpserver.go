@@ -10,6 +10,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -294,6 +295,7 @@ func newHandler() http.Handler {
 			http.Error(w, "Device get error "+err.Error(), http.StatusGone)
 			return
 		}
+		// create websocket connection
 		ws, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			log.Println(err)
@@ -309,10 +311,28 @@ func newHandler() http.Handler {
 			Using:        newBool(true),
 			UsingBeganAt: time.Now(),
 		})
-		defer db.DeviceUpdate(proto.DeviceInfo{
-			Udid:  udid,
-			Using: newBool(false),
-		})
+		defer func() {
+			db.DeviceUpdate(proto.DeviceInfo{
+				Udid:  udid,
+				Using: newBool(false),
+			})
+			go func() {
+				port := info.Port
+				if port == 0 {
+					port = 7912
+				}
+				reqURL := "http://" + info.IP + ":" + strconv.Itoa(port) + "/shell"
+				req, _ := http.NewRequest("GET", reqURL, nil)
+				q := req.URL.Query()
+				q.Add("command", "am start -n com.github.uiautomator/.IdentifyActivity")
+				req.URL.RawQuery = q.Encode()
+
+				resp, err := http.DefaultClient.Do(req)
+				if err == nil {
+					resp.Body.Close()
+				}
+			}()
+		}()
 		// wait until ws disconnected
 		for {
 			if _, _, err := ws.ReadMessage(); err != nil {

@@ -22,7 +22,7 @@ func initDB(address, dbName string) {
 	session, err := r.Connect(r.ConnectOpts{
 		Address:    address,
 		Database:   dbName,
-		InitialCap: 10,
+		InitialCap: 1,
 		MaxOpen:    10,
 	})
 
