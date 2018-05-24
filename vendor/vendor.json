@@ -45,6 +45,12 @@
 			"revisionTime": "2017-12-21T02:59:54Z"
 		},
 		{
+			"checksumSHA1": "i6xYHxki+8ujtxYuQNMVliOmqwM=",
+			"path": "github.com/codeskyblue/realip",
+			"revision": "57e9cd075d0e04e9a3f1275ed153d52358db1627",
+			"revisionTime": "2018-05-09T03:13:53Z"
+		},
+		{
 			"checksumSHA1": "yqF125xVSkmfLpIVGrLlfE05IUk=",
 			"path": "github.com/golang/protobuf/proto",
 			"revision": "1e59b77b52bf8e4b449a57e6f79f21226d571845",
@@ -67,6 +73,12 @@
 			"path": "github.com/hailocab/go-hostpool",
 			"revision": "e80d13ce29ede4452c43dea11e79b9bc8a15b478",
 			"revisionTime": "2016-01-25T11:53:50Z"
+		},
+		{
+			"checksumSHA1": "X+hxGyVvXE2FRTH18MzxUQbTgY0=",
+			"path": "github.com/koding/websocketproxy",
+			"revision": "944ae4ae170f3afa1e0683bcc3230d34c21e70eb",
+			"revisionTime": "2018-05-18T00:55:06Z"
 		},
 		{
 			"checksumSHA1": "WGJscGTXRsE32tL+z1ljXPXYhRE=",

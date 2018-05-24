@@ -16,9 +16,9 @@ import (
 
 	"github.com/codeskyblue/heartbeat"
 	"github.com/codeskyblue/realip"
-	"github.com/codeskyblue/websocketproxy"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
+	"github.com/koding/websocketproxy"
 	accesslog "github.com/mash/go-accesslog"
 	"github.com/openatx/atx-server/proto"
 	log "github.com/sirupsen/logrus"
