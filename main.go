@@ -158,7 +158,7 @@ func batchRunCommand(command string) {
 
 func main() {
 	// Refs: atx-agent version https://github.com/openatx/atx-agent/releases
-	kingpin.Flag("agent", "atx-agent version").Default("0.3.2").StringVar(&atxAgentVersion)
+	kingpin.Flag("agent", "atx-agent version").Default("0.3.3").StringVar(&atxAgentVersion)
 	// FIXME(ssx): Ding talk is disabled because of too many boring messages
 	kingpin.Flag("ding-token", "DingDing robot token (env: DING_TOKEN)").OverrideDefaultFromEnvar("DING_TOKEN").StringVar(&dingtalkToken)
 	kingpin.Version(version)
