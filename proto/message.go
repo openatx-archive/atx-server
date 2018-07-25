@@ -2,6 +2,7 @@ package proto
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/openatx/androidutils"
@@ -63,7 +64,11 @@ type DeviceInfo struct {
 	Present *bool `json:"present,omitempty"`
 	Using   *bool `json:"using,omitempty"`
 
-	Product *Product `json:"product,omitempty" gorethink:"product_id,reference,omitempty" gorethink_ref:"id"`
+	Product  *Product  `json:"product" gorethink:"product_id,reference,omitempty" gorethink_ref:"id"`
+	Provider *Provider `json:"provider" gorethink:"provider_id,reference,omitempty" gorethink_ref:"id"`
+
+	// only works when there is provider
+	ProviderForwardedPort int `json:"providerForwardedPort,omitempty"`
 }
 
 // "Brand Model Memory CPU" together can define a phone
@@ -79,4 +84,18 @@ type Product struct {
 	Gpu      string  `json:"gpu,omitempty"`
 	Link     string  `json:"link,omitempty"` // Outside link
 	// AntutuScore int     `json:"antutuScore,omitempty"`
+}
+
+// u2init
+type Provider struct {
+	Id        string    `json:"id" gorethink:"id,omitempty"` // machine id
+	IP        string    `json:"ip" gorethink:"ip,omitempty"`
+	Port      int       `json:"port" gorethink:"port,omitempty"`
+	Present   *bool     `json:"present,omitempty"`
+	CreatedAt time.Time `json:"-" gorethink:"createdAt,omitempty"`
+}
+
+// Addr combined with ip:port
+func (p *Provider) Addr() string {
+	return fmt.Sprintf("%s:%d", p.IP, p.Port)
 }

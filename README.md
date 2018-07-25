@@ -73,11 +73,15 @@ $ curl $SERVER_URL/list
 [
     {
         "udid": "741AEDR42P6YM-2c:57:31:4b:40:74-M2_E",
+        "ip": "10.240.218.20",
+        "present": true,
+        "ready": true,
+        "using": true,
+        "provider": null,
         "serial": "741AEDR42P6YM",
         "brand": "Meizu",
         "model": "M2 E",
         "hwaddr": "2c:57:31:4b:40:74",
-        "ip": "10.240.218.20",
         "agentVersion": "0.1.1",
         "battery": {},
         "display": {
@@ -88,9 +92,30 @@ $ curl $SERVER_URL/list
 ]
 ```
 
+There are some fields you need pay attention.
+
+- `present` means device is online
+- `ready` is the thumb :thumbsup: you can see and edit in the web
+- `using` means if device is using by someone
+
+`provider` is a special field, if device is plugged into some machine which running [u2init](https://github.com/openatx/u2init), the bellow info can be found in device info.
+
+```json
+"provider": {
+    "id": "33576428",
+    "ip": "10.0.0.1",
+    "port": 10000,
+    "present": true  # provider online of not
+}
+```
+
+if `provider` is `null` it means device is not plugged-in.
+
 ## /devices/{query}/info
 ```bash
 $ curl $SERVER_URL/devices/ip:10.0.0.1/info
+# or
+$ curl $SERVER_URL/devices/$UDID/info
 ```
 
 返回值同/list的的单个结果，这里就不写了。
@@ -114,15 +139,18 @@ $ curl -X POST -F command="pwd" $SERVER_URL/devices/{query}/shell
 }
 ```
 
-## 设备占用
+## 设备管理
+占用、释放
+
 状态码 成功200,失败403
 
+### 占用设备
 ```bash
 $ curl -X POST $SERVER_URL/devices/{query}/reserved
 Success
 ```
 
-## 设备释放
+### 释放设备
 状态码 成功200,失败403
 
 ```bash
@@ -136,6 +164,48 @@ Release success
 $ curl -X POST $SERVER_URL/devices/:random/reserved
 Success
 ```
+
+## Communication between provider(u2init) and server(atx-server)
+Provider send POST to Server
+**heartbeat info** to let server known provider is online. It is also need to send the same data to Server in 15s or the Provider will be marked offline.
+
+```bash
+$ curl -X POST -F id=$PROVIDER_ID -F port=11000 $SERVER_URL/provider/heartbeat
+```
+
+You may need to add ip field if provider and server is not in the same network
+
+```bash
+$ PROVIDER_IP=10.0.0.1 # change to your provider ip
+$ PROVIDER_ID=ccdd11ff # change to your provider id
+$ curl -X POST \
+    -F ip=$PROVIDER_IP \
+    -F id=$PROVIDER_ID \
+    -F port=11000 \
+    $SERVER_URL/provider/heartbeat
+```
+
+Server response status 200 indicate success, or 400 and else means failure
+
+Send using bellow command when there is device plugged-in
+
+```bash
+$ DEVICE_UDID="3578298f-b4:0b:44:e6:1f:90-OD103" # change to your device udid
+$ DATA="{\"status\": \"online\", \"udid\": \"$DEVICE_UDID\"}"
+$ curl -X POST \
+    -F id=$PROVIDER_ID \
+    -F port=11000 \
+    -F data="$DATA"  $SERVER_URL/provider/heartbeat
+```
+
+## Comminication between atx-agent and atx-server
+It is complicated. Hard to write.
+
+## References and some good resources
+- Golang library for rethinkdb [gorethink](https://github.com/GoRethink/gorethink)
+- [美团点评云真机平台实践](https://tech.meituan.com/cloud_phone.html)
+- [腾讯TMQ-远程移动测试平台对比分析](https://blog.csdn.net/TMQ1225/article/details/52369171)
+- [藏经阁-iOS多机远程控制技术](http://www.sohu.com/a/240584209_744135)
 
 # LICENSE
 [MIT](LICENSE)

@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -19,9 +20,9 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/koding/websocketproxy"
-	accesslog "github.com/mash/go-accesslog"
+	hb2 "github.com/openatx/atx-server/heartbeat"
 	"github.com/openatx/atx-server/proto"
-	log "github.com/sirupsen/logrus"
+	"github.com/qiniu/log"
 )
 
 var (
@@ -146,8 +147,7 @@ func newHandler() http.Handler {
 			http.Error(w, err.Error(), http.StatusForbidden)
 			return
 		}
-		err = db.DeviceUpdate(proto.DeviceInfo{
-			Udid: mux.Vars(r)["udid"],
+		err = db.DeviceUpdate(mux.Vars(r)["udid"], proto.DeviceInfo{
 			Product: &proto.Product{
 				Id: product.Id,
 			},
@@ -250,8 +250,7 @@ func newHandler() http.Handler {
 			io.WriteString(w, err.Error())
 			return
 		}
-		info.Udid = udid
-		db.DeviceUpdate(info) // TODO: update database
+		db.DeviceUpdate(udid, info)
 		io.WriteString(w, "Success")
 	}).Methods("GET", "POST")
 
@@ -272,8 +271,7 @@ func newHandler() http.Handler {
 			if id == "" && r.FormValue("id_number") != "" {
 				id = "HIH-PHO-" + r.FormValue("id_number")
 			}
-			db.DeviceUpdate(proto.DeviceInfo{
-				Udid:       info.Udid,
+			db.DeviceUpdate(info.Udid, proto.DeviceInfo{
 				PropertyId: id,
 			})
 			info.PropertyId = id
@@ -306,14 +304,12 @@ func newHandler() http.Handler {
 			log.Printf("Device %s is using", udid)
 			return
 		}
-		db.DeviceUpdate(proto.DeviceInfo{
-			Udid:         info.Udid,
+		db.DeviceUpdate(info.Udid, proto.DeviceInfo{
 			Using:        newBool(true),
 			UsingBeganAt: time.Now(),
 		})
 		defer func() {
-			db.DeviceUpdate(proto.DeviceInfo{
-				Udid:  udid,
+			db.DeviceUpdate(udid, proto.DeviceInfo{
 				Using: newBool(false),
 			})
 			go func() {
@@ -360,8 +356,7 @@ func newHandler() http.Handler {
 				http.Error(w, "Device is using", http.StatusForbidden)
 				return
 			}
-			db.DeviceUpdate(proto.DeviceInfo{
-				Udid:         info.Udid,
+			db.DeviceUpdate(info.Udid, proto.DeviceInfo{
 				Using:        newBool(true),
 				UsingBeganAt: time.Now(),
 			})
@@ -369,8 +364,7 @@ func newHandler() http.Handler {
 			return
 		}
 		// DELETE
-		db.DeviceUpdate(proto.DeviceInfo{
-			Udid:  udid,
+		db.DeviceUpdate(udid, proto.DeviceInfo{
 			Using: newBool(false),
 		})
 		io.WriteString(w, "Release success")
@@ -405,7 +399,7 @@ func newHandler() http.Handler {
 	hbs := heartbeat.NewServer("hello kitty", 15*time.Second)
 	hbs.OnConnect = func(identifier string, r *http.Request) {
 		host := realip.FromRequest(r)
-		db.UpdateOrInsertDevice(proto.DeviceInfo{
+		db.DeviceUpdateOrInsert(proto.DeviceInfo{
 			Udid: identifier,
 			IP:   host,
 		})
@@ -415,7 +409,7 @@ func newHandler() http.Handler {
 	// Called when client ip changes
 	hbs.OnReconnect = func(identifier string, r *http.Request) {
 		host := realip.FromRequest(r)
-		db.UpdateOrInsertDevice(proto.DeviceInfo{
+		db.DeviceUpdateOrInsert(proto.DeviceInfo{
 			Udid: identifier,
 			IP:   host,
 		})
@@ -428,5 +422,66 @@ func newHandler() http.Handler {
 	}
 	r.Handle("/heartbeat", hbs)
 
-	return accesslog.NewLoggingHandler(r, HTTPLogger{})
+	providerhbs := hb2.NewServer(&ProviderReceiver{})
+	r.Handle("/provider/heartbeat", providerhbs)
+
+	return r
+}
+
+type ProviderReceiver struct{}
+
+func (p *ProviderReceiver) OnConnect(ctx hb2.Context) error {
+	port, _ := strconv.Atoi(ctx.Request.FormValue("port"))
+	if port == 0 {
+		return errors.New("Request port is required")
+	}
+	log.Printf("Provider id:%s ip:%s is connected", ctx.ID, ctx.IP)
+	return db.ProviderUpdateOrInsert(ctx.ID, ctx.IP, port)
+}
+
+func (p *ProviderReceiver) OnDisconnect(id string) {
+	log.Printf("Provider %s disconnected", id)
+	db.ProviderUpdate(id, proto.Provider{
+		Present: newBool(false),
+	})
+}
+
+/*
+POST udid, status=<online|offline>
+*/
+func (p *ProviderReceiver) OnRequest(ctx hb2.Context) error {
+	id, req := ctx.ID, ctx.Request
+	data := req.FormValue("data")
+	var v map[string]string
+	if err := json.Unmarshal([]byte(data), &v); err != nil {
+		return err
+	}
+	status, udid := v["status"], v["udid"]
+	if status == "" || udid == "" {
+		return errors.New("status or udid is empty")
+	}
+	provider, err := db.ProviderGet(id)
+	if err != nil {
+		log.Println("Unexpect err:", err)
+		return err
+	}
+	var providerId = &provider.Id
+	var providerConnected *bool
+	if status == "online" {
+		log.Printf("Provider device: %s is plugged-in", udid)
+		providerConnected = newBool(true)
+	} else if status == "offline" {
+		log.Printf("Provider device: %s is plugged-off", udid)
+		providerConnected = newBool(false)
+		providerId = nil
+	} else {
+		log.Printf("Invalid status: %s, only <offline|online> is allowed.", status)
+		return errors.New("status is required")
+	}
+
+	return db.DeviceUpdate(udid, map[string]interface{}{
+		"provider_id":           providerId,
+		"providerConnected":     providerConnected,
+		"providerForwardedPort": 0,
+	})
 }

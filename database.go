@@ -3,12 +3,11 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"strings"
 	"time"
 
 	"github.com/openatx/atx-server/proto"
-	log "github.com/sirupsen/logrus"
+	"github.com/qiniu/log"
 	r "gopkg.in/gorethink/gorethink.v4"
 )
 
@@ -36,14 +35,11 @@ func initDB(address, dbName string) {
 		panic(err)
 	}
 	log.Println("create tables")
-	if err := db.TableCreateAnyway("devices", r.TableCreateOpts{
+	db.TableMustCreate("devices", r.TableCreateOpts{
 		PrimaryKey: "udid",
-	}); err != nil {
-		panic(err)
-	}
-	if err := db.TableCreateAnyway("products"); err != nil {
-		panic(err)
-	}
+	})
+	db.TableMustCreate("products")
+	db.TableMustCreate("providers")
 
 	r.Table("devices").Update(map[string]bool{
 		"present": false,
@@ -75,6 +71,12 @@ func (db *RdbUtils) DBCreateAnyway(name string) error {
 	return err
 }
 
+func (db *RdbUtils) TableMustCreate(name string, optArgs ...r.TableCreateOpts) {
+	if err := db.TableCreateAnyway(name, optArgs...); err != nil {
+		panic(err)
+	}
+}
+
 func (db *RdbUtils) TableCreateAnyway(name string, optArgs ...r.TableCreateOpts) error {
 	err := r.TableCreate(name, optArgs...).Exec(db.session)
 	if err != nil && strings.Contains(err.Error(), "already exists") {
@@ -83,8 +85,8 @@ func (db *RdbUtils) TableCreateAnyway(name string, optArgs ...r.TableCreateOpts)
 	return err
 }
 
-// UpdateOrInsertDevice called when device plugin
-func (db *RdbUtils) UpdateOrInsertDevice(dev proto.DeviceInfo) error {
+// DeviceUpdateOrInsert called when device plugin
+func (db *RdbUtils) DeviceUpdateOrInsert(dev proto.DeviceInfo) error {
 	dev.Present = newBool(true)
 	dev.PresenceChangedAt = time.Now()
 	// only update when create
@@ -103,11 +105,8 @@ func (db *RdbUtils) UpdateOrInsertDevice(dev proto.DeviceInfo) error {
 	return err
 }
 
-func (db *RdbUtils) DeviceUpdate(dev proto.DeviceInfo) error {
-	if dev.Udid == "" {
-		return errors.New("DeviceInfo require udid field")
-	}
-	_, err := r.Table("devices").Get(dev.Udid).Update(dev).RunWrite(db.session)
+func (db *RdbUtils) DeviceUpdate(udid string, arg interface{}) error {
+	_, err := r.Table("devices").Get(udid).Update(arg).RunWrite(db.session)
 	return err
 }
 
@@ -132,7 +131,8 @@ func (db *RdbUtils) DeviceGet(udid string) (info proto.DeviceInfo, err error) {
 	res, err := r.Table("devices").Get(udid).
 		Merge(func(p r.Term) interface{} {
 			return map[string]interface{}{
-				"product_id": r.Table("products").Get(p.Field("product_id").Default(0)),
+				"product_id":  r.Table("products").Get(p.Field("product_id").Default(0)),
+				"provider_id": r.Table("providers").Get(p.Field("provider_id").Default(0)),
 			}
 		}).Run(db.session)
 	if err != nil {
@@ -166,9 +166,8 @@ func (db *RdbUtils) DeviceFindAll(info proto.DeviceInfo) (infos []proto.DeviceIn
 // SetDevicePresent change present status
 func (db *RdbUtils) SetDeviceAbsent(udid string) error {
 	log.Debugf("device absent: %s", udid)
-	return db.DeviceUpdate(proto.DeviceInfo{
-		Udid:              udid,
-		Present:           newBool(false), // &present,
+	return db.DeviceUpdate(udid, proto.DeviceInfo{
+		Present:           newBool(false),
 		PresenceChangedAt: time.Now(),
 	})
 }
@@ -217,4 +216,39 @@ func (db *RdbUtils) ProductUpdate(id string, product proto.Product) error {
 	product.Id = ""
 	_, err := r.Table("products").Get(id).Update(product).RunWrite(db.session)
 	return err
+}
+
+// ProviderUpdateOrInsert will create a record if not exists
+func (db *RdbUtils) ProviderUpdateOrInsert(machineId string, ip string, port int) error {
+	p := proto.Provider{
+		Id:        machineId,
+		IP:        ip,
+		Port:      port,
+		Present:   newBool(true),
+		CreatedAt: time.Now(),
+	}
+	_, err := r.Table("providers").Insert(p, r.InsertOpts{
+		Conflict: func(id, oldDoc, newDoc r.Term) interface{} {
+			return oldDoc.Merge(newDoc.Without("createdAt")).Merge(map[string]interface{}{
+				"createdAt": oldDoc.Field("createdAt").Default(time.Now()),
+			})
+		},
+	}).RunWrite(db.session)
+	return err
+}
+
+func (db *RdbUtils) ProviderUpdate(id string, provider proto.Provider) error {
+	provider.Id = id
+	_, err := r.Table("providers").Get(id).Update(provider).RunWrite(db.session)
+	return err
+}
+
+func (db *RdbUtils) ProviderGet(id string) (provider proto.Provider, err error) {
+	res, err := r.Table("providers").Get(id).Run(db.session)
+	if err != nil {
+		return
+	}
+	defer res.Close()
+	err = res.One(&provider)
+	return
 }

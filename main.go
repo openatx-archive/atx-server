@@ -14,15 +14,14 @@ import (
 
 	"github.com/alecthomas/kingpin"
 	"github.com/codeskyblue/dingrobot"
-	"github.com/codeskyblue/inforus"
-
 	"github.com/gorilla/websocket"
 	"github.com/openatx/atx-server/proto"
-	log "github.com/sirupsen/logrus"
+	"github.com/qiniu/log"
 )
 
 const (
-	version = "dev"
+	version                = "dev"
+	defaultATXAgentVersion = "0.3.6"
 )
 
 var (
@@ -84,7 +83,7 @@ func echo(w http.ResponseWriter, r *http.Request) {
 		devInfo.Memory.Around = fmt.Sprintf("%d GB", around)
 	}
 
-	db.UpdateOrInsertDevice(*devInfo)
+	db.DeviceUpdateOrInsert(*devInfo)
 	defer func() {
 		db.SetDeviceAbsent(devInfo.Udid)
 		// TODO(ssx): global var, not very function programing
@@ -158,7 +157,7 @@ func batchRunCommand(command string) {
 
 func main() {
 	// Refs: atx-agent version https://github.com/openatx/atx-agent/releases
-	kingpin.Flag("agent", "atx-agent version").Default("0.3.3").StringVar(&atxAgentVersion)
+	kingpin.Flag("agent", "atx-agent version").Default(defaultATXAgentVersion).StringVar(&atxAgentVersion)
 	// FIXME(ssx): Ding talk is disabled because of too many boring messages
 	kingpin.Flag("ding-token", "DingDing robot token (env: DING_TOKEN)").OverrideDefaultFromEnvar("DING_TOKEN").StringVar(&dingtalkToken)
 	kingpin.Version(version)
@@ -166,9 +165,9 @@ func main() {
 	kingpin.Parse()
 
 	// log.SetFlags(log.Lshortfile | log.LstdFlags)
-	log.SetLevel(log.DebugLevel)
-	log.SetFormatter(&log.TextFormatter{})
-	inforus.AddHookDefault()
+	// log.SetLevel(log.DebugLevel)
+	// log.SetFormatter(&log.TextFormatter{})
+	// inforus.AddHookDefault()
 
 	if *port != 8000 {
 		*addr = fmt.Sprintf(":%d", *port)
