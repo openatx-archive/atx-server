@@ -41,8 +41,9 @@ func initDB(address, dbName string) {
 	db.TableMustCreate("products")
 	db.TableMustCreate("providers")
 
-	r.Table("devices").Update(map[string]bool{
-		"present": false,
+	r.Table("devices").Update(map[string]interface{}{
+		"present":     false,
+		"provider_id": 0,
 	}).Exec(session)
 }
 
@@ -240,6 +241,19 @@ func (db *RdbUtils) ProviderUpdateOrInsert(machineId string, ip string, port int
 func (db *RdbUtils) ProviderUpdate(id string, provider proto.Provider) error {
 	provider.Id = id
 	_, err := r.Table("providers").Get(id).Update(provider).RunWrite(db.session)
+	return err
+}
+
+func (db *RdbUtils) ProviderOffline(id string) error {
+	_, err := r.Table("providers").Get(id).Update(proto.Provider{
+		Present: newBool(false),
+	}).RunWrite(db.session)
+	if err != nil {
+		return err
+	}
+	_, err = r.Table("devices").Filter(r.Row.Field("provider_id").Eq(id)).Update(map[string]interface{}{
+		"provider_id": 0,
+	}).RunWrite(db.session)
 	return err
 }
 

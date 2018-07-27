@@ -441,9 +441,7 @@ func (p *ProviderReceiver) OnConnect(ctx hb2.Context) error {
 
 func (p *ProviderReceiver) OnDisconnect(id string) {
 	log.Printf("Provider %s disconnected", id)
-	db.ProviderUpdate(id, proto.Provider{
-		Present: newBool(false),
-	})
+	db.ProviderOffline(id)
 }
 
 /*
@@ -452,11 +450,16 @@ POST udid, status=<online|offline>
 func (p *ProviderReceiver) OnRequest(ctx hb2.Context) error {
 	id, req := ctx.ID, ctx.Request
 	data := req.FormValue("data")
-	var v map[string]string
+	log.Println("Receive data:", data)
+	var v struct {
+		Status                string `json:"status"`
+		Udid                  string `json:"udid"`
+		ProviderForwardedPort int    `json:"providerForwardedPort"`
+	}
 	if err := json.Unmarshal([]byte(data), &v); err != nil {
 		return err
 	}
-	status, udid := v["status"], v["udid"]
+	status, udid := v.Status, v.Udid
 	if status == "" || udid == "" {
 		return errors.New("status or udid is empty")
 	}
@@ -466,13 +469,10 @@ func (p *ProviderReceiver) OnRequest(ctx hb2.Context) error {
 		return err
 	}
 	var providerId = &provider.Id
-	var providerConnected *bool
 	if status == "online" {
 		log.Printf("Provider device: %s is plugged-in", udid)
-		providerConnected = newBool(true)
 	} else if status == "offline" {
 		log.Printf("Provider device: %s is plugged-off", udid)
-		providerConnected = newBool(false)
 		providerId = nil
 	} else {
 		log.Printf("Invalid status: %s, only <offline|online> is allowed.", status)
@@ -481,7 +481,6 @@ func (p *ProviderReceiver) OnRequest(ctx hb2.Context) error {
 
 	return db.DeviceUpdate(udid, map[string]interface{}{
 		"provider_id":           providerId,
-		"providerConnected":     providerConnected,
-		"providerForwardedPort": 0,
+		"providerForwardedPort": v.ProviderForwardedPort,
 	})
 }

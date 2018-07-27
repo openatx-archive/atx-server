@@ -34,12 +34,12 @@ func NewServer(receiver Receiver) *Server {
 func (h *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	id := r.FormValue("id")
 	if id == "" {
-		http.Error(w, "FormValud id is required", 400)
+		http.Error(w, "param id is required", 400)
 		return
 	}
 	port, _ := strconv.Atoi(r.FormValue("port"))
 	if port == 0 {
-		http.Error(w, "FormValue port is required", 400)
+		http.Error(w, "param port is required", 400)
 		return
 	}
 	ip := r.FormValue("ip")
@@ -79,7 +79,7 @@ func (h *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		sess.Update()
 	}
-	if r.FormValue("data") == "" {
+	if r.FormValue("data") == "" || r.FormValue("data") == "null" {
 		io.WriteString(w, "success ping\n")
 		return
 	}
