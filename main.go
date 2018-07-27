@@ -141,7 +141,8 @@ func runAndroidShell(ip string, command string) (output string, err error) {
 func batchRunCommand(command string) {
 	wg := sync.WaitGroup{}
 
-	for _, devInfo := range db.DeviceList() {
+	devices, _ := db.DeviceList()
+	for _, devInfo := range devices {
 		if devInfo.Present == nil || !*devInfo.Present {
 			continue
 		}

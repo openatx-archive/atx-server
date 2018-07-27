@@ -228,7 +228,11 @@ func newHandler() http.Handler {
 	})
 
 	r.HandleFunc("/list", func(w http.ResponseWriter, r *http.Request) {
-		devices := db.DeviceList()
+		devices, err := db.DeviceList()
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
 		renderJSON(w, devices)
 	})
 

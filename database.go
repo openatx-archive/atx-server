@@ -111,20 +111,21 @@ func (db *RdbUtils) DeviceUpdate(udid string, arg interface{}) error {
 	return err
 }
 
-func (db *RdbUtils) DeviceList() (devices []proto.DeviceInfo) {
+func (db *RdbUtils) DeviceList() (devices []proto.DeviceInfo, err error) {
 	res, err := r.Table("devices").
 		OrderBy(r.Desc("present"), r.Desc("ready"), r.Desc("using"), r.Desc("presenceChangedAt")).
 		Merge(func(p r.Term) interface{} {
 			return map[string]interface{}{
-				"product_id": r.Table("products").Get(p.Field("product_id").Default(0)),
+				"product_id":  r.Table("products").Get(p.Field("product_id").Default(0)),
+				"provider_id": r.Table("providers").Get(p.Field("provider_id").Default(0)),
 			}
 		}).Run(db.session)
 	if err != nil {
 		log.Error(err)
-		return nil
+		return
 	}
 	defer res.Close()
-	res.All(&devices)
+	err = res.All(&devices)
 	return
 }
 
