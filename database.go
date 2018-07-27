@@ -151,7 +151,8 @@ func (db *RdbUtils) DeviceFindAll(info proto.DeviceInfo) (infos []proto.DeviceIn
 	res, err := r.Table("devices").Filter(info).
 		Merge(func(p r.Term) interface{} {
 			return map[string]interface{}{
-				"product_id": r.Table("products").Get(p.Field("product_id").Default(0)),
+				"product_id":  r.Table("products").Get(p.Field("product_id").Default(0)),
+				"provider_id": r.Table("providers").Get(p.Field("provider_id").Default(0)),
 			}
 		}).Run(db.session)
 	if err != nil {
