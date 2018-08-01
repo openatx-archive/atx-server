@@ -190,7 +190,9 @@
             <td class="hidden-xs">
               {{d.battery && d.battery.level}}%
               <template v-if="d.present && d.battery">
-                <i class="hidden-xs fa fa-plug color-rest" v-if="d.battery.status == 2"></i>
+                <i class="hidden-xs fa fa-usb" v-if="d.provider"></i>
+                <!-- 2: charging -->
+                <i class="hidden-xs fa fa-plug color-rest" v-else-if="d.battery.status == 2"></i>
                 <i class="hidden-xs fa-fix-height fa" v-else :class='"fa-battery-" + Math.floor(d.battery.level/25)'></i>
               </template>
             </td>
