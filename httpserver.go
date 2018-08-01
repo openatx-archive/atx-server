@@ -349,7 +349,6 @@ func newHandler() http.Handler {
 			http.Error(w, "Device not found "+err.Error(), http.StatusGone)
 			return
 		}
-		log.Println("HEllo")
 		if r.Method == "POST" {
 			info, err := db.DeviceGet(udid)
 			if err != nil {
@@ -439,7 +438,7 @@ func (p *ProviderReceiver) OnConnect(ctx hb2.Context) error {
 	if port == 0 {
 		return errors.New("Request port is required")
 	}
-	log.Printf("Provider id:%s ip:%s is connected", ctx.ID, ctx.IP)
+	log.Printf("Provider id:%s ip:%s port:%d is connected", ctx.ID, ctx.IP, port)
 	return db.ProviderUpdateOrInsert(ctx.ID, ctx.IP, port)
 }
 
@@ -474,9 +473,9 @@ func (p *ProviderReceiver) OnRequest(ctx hb2.Context) error {
 	}
 	var providerId = &provider.Id
 	if status == "online" {
-		log.Printf("Provider device: %s is plugged-in", udid)
+		log.Printf("Device: %s is plugged-in", udid)
 	} else if status == "offline" {
-		log.Printf("Provider device: %s is plugged-off", udid)
+		log.Printf("Device: %s is plugged-off", udid)
 		providerId = nil
 	} else {
 		log.Printf("Invalid status: %s, only <offline|online> is allowed.", status)

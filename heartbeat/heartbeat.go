@@ -61,9 +61,10 @@ func (h *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		h.sessions[id] = &Session{
-			Timeout:  time.Second * 15,
-			sigC:     make(chan bool),
-			remoteIP: ip,
+			Timeout:    time.Second * 15,
+			sigC:       make(chan bool),
+			remoteIP:   ip,
+			remotePort: port,
 		}
 		go func() {
 			h.sessions[id].drain()
@@ -71,7 +72,9 @@ func (h *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			delete(h.sessions, id)
 		}()
 	} else {
-		if ip != sess.remoteIP {
+		if ip != sess.remoteIP || port != sess.remotePort {
+			sess.remoteIP = ip
+			sess.remotePort = port
 			if err := h.receiver.OnConnect(ctx); err != nil {
 				http.Error(w, err.Error(), 400)
 				return
@@ -98,10 +101,11 @@ type Receiver interface {
 }
 
 type Session struct {
-	id       string
-	remoteIP string
-	Timeout  time.Duration
-	sigC     chan bool
+	id         string
+	remoteIP   string
+	remotePort int
+	Timeout    time.Duration
+	sigC       chan bool
 }
 
 func (hs *Session) Update() {
