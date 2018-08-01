@@ -328,14 +328,17 @@
             var dataNew = jdata.new,
               dataOld = jdata.old;
             if (dataNew && dataOld) {
-              this.devices = this.devices.map(function (device) {
-                if (device.udid == dataNew.udid) {
-                  dataNew.identifying = false;
-                  dataNew.product = device.product;
-                  return dataNew;
-                }
-                return device;
-              })
+              $.ajax({
+                url: "/devices/" + dataNew.udid + "/info",
+                dataType: "json",
+              }).then(function (ret) {
+                this.devices = this.devices.map(function (d) {
+                  if (d.udid == dataNew.udid) {
+                    return ret;
+                  }
+                  return d;
+                })
+              }.bind(this))
             } else {
               this.loadDevices();
             }
