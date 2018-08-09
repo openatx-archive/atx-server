@@ -315,6 +315,9 @@
           this.errmsg = "Connecting"
 
           var ws = new WebSocket("ws://" + location.host + "/feeds")
+          var key = setInterval(function () {
+            ws.send("ping")
+          }, 5000);
           ws.onopen = function () {
             console.log("websocket connected")
             this.errmsg = "";
@@ -346,6 +349,7 @@
           }.bind(this)
           ws.onclose = function (evt) {
             console.log("websocket closed")
+            clearInterval(key)
             this.errmsg = "Server connection closed. " + this.errmsg;
           }.bind(this)
         },
