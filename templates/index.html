@@ -155,7 +155,7 @@
                 <a v-if="!d.using" target="_blank" class="btn btn-xs btn-link" :href='"/devices/"+d.udid+"/remote"'>
                   Use
                 </a>
-                <span class="color-red" v-if="d.using" @dblclick.alt="releaseDevice(d.udid)">Busy</span>
+                <span class="color-red" v-if="d.using" @dblclick.alt="releaseDevice(d.udid)">Busy {{d.owner && d.owner.ip}}</span>
               </template>
               <span v-text="d.reserved"> </span>
             </td>

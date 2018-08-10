@@ -311,6 +311,9 @@ func newHandler() http.Handler {
 		db.DeviceUpdate(info.Udid, proto.DeviceInfo{
 			Using:        newBool(true),
 			UsingBeganAt: time.Now(),
+			Owner: &proto.OwnerInfo{
+				IP: realip.FromRequest(r),
+			},
 		})
 		defer func() {
 			db.DeviceUpdate(udid, proto.DeviceInfo{
@@ -355,6 +358,10 @@ func newHandler() http.Handler {
 				http.Error(w, "Device get error "+err.Error(), http.StatusGone)
 				return
 			}
+			if !toBool(info.Present) {
+				http.Error(w, "Device offline", http.StatusGone)
+				return
+			}
 			if toBool(info.Using) {
 				http.Error(w, "Device is using", http.StatusForbidden)
 				return
@@ -362,6 +369,9 @@ func newHandler() http.Handler {
 			db.DeviceUpdate(info.Udid, proto.DeviceInfo{
 				Using:        newBool(true),
 				UsingBeganAt: time.Now(),
+				Owner: &proto.OwnerInfo{
+					IP: realip.FromRequest(r),
+				},
 			})
 			io.WriteString(w, "Success")
 			return

@@ -35,6 +35,10 @@ type MemoryInfo struct {
 	Around string `json:"around,omitempty"`
 }
 
+type OwnerInfo struct {
+	IP string `json:"ip"`
+}
+
 type DeviceInfo struct {
 	Udid                   string                `json:"udid,omitempty"`       // Unique device identifier
 	PropertyId             string                `json:"propertyId,omitempty"` // For device managerment, eg: HIH-PHO-1122
@@ -54,8 +58,10 @@ type DeviceInfo struct {
 	Memory                 *MemoryInfo           `json:"memory,omitempty"` // proc/meminfo
 	Cpu                    *CpuInfo              `json:"cpu,omitempty"`    // proc/cpuinfo
 
+	Owner    *OwnerInfo `json:"owner" gorethink:"owner,omitempty"`
+	Reserved string     `json:"reserved,omitempty"`
+
 	ConnectionCount   int       `json:"-"` // > 1 happended when phone redial server
-	Reserved          string    `json:"reserved,omitempty"`
 	CreatedAt         time.Time `json:"-" gorethink:"createdAt,omitempty"`
 	PresenceChangedAt time.Time `json:"presenceChangedAt,omitempty"`
 	UsingBeganAt      time.Time `json:"usingBeganAt,omitempty" gorethink:"usingBeganAt,omitempty"`
