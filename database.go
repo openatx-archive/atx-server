@@ -43,6 +43,7 @@ func initDB(address, dbName string) {
 
 	r.Table("devices").Update(map[string]interface{}{
 		"present":     false,
+		"using":       false,
 		"provider_id": 0,
 	}).Exec(session)
 }

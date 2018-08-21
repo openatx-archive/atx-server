@@ -349,8 +349,11 @@
   </div>
 </script>
 <script>
-  var deviceIp = "[[.]]";
-  var deviceUdid = "ip:[[.]]"
+  var deviceIp = "[[.IP]]"
+  var devicePort = "[[.Port]]"
+  var deviceUdid = "[[.Udid]]"
+
+  console.log("Infos:", deviceIp, devicePort, deviceUdid)
 
   Vue.component('tab-item', {
     template: '#tab-item-component',

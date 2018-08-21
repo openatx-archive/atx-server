@@ -21,7 +21,7 @@ import (
 
 const (
 	version                = "dev"
-	defaultATXAgentVersion = "0.3.6"
+	defaultATXAgentVersion = "0.4.3"
 )
 
 var (

@@ -121,7 +121,7 @@
             <th>
               <u>名字</u>
             </th>
-            <th class="hidden-xs">
+            <th>
               <u>Brand</u>
             </th>
             <th class="hidden">Model</th>
@@ -130,11 +130,11 @@
             <th class="hidden">CPU</th>
             <th class="hidden">MAC</th>
             <th class="hidden">Memory</th>
-            <th>Agent</th>
+            <th class="hidden-xs">Agent</th>
             <th class="hidden-xs">电量
               <i class="fa fa-battery"></i>
             </th>
-            <th class="hidden-xs">温度
+            <th>温度
               <i class="fa fa-thermometer"></i>
             </th>
             <th class="hidden-xs">上线时间</th>
@@ -174,7 +174,7 @@
               <span v-text="(d.product || {}).name"></span>
               <a :href="'/devices/'+d.udid+'/edit'" class="fa fa-edit"></a>
             </td>
-            <td class="hidden-xs" v-text="d.brand"></td>
+            <td v-text="d.brand"></td>
             <td class="hidden" v-text="d.model"></td>
             <td class="hidden-xs">{{d.version}}({{d.sdk}})</td>
             <td class="hidden">
@@ -184,7 +184,7 @@
               <span v-text="d.hwaddr"></span>
             </td>
             <td class="hidden">{{d.memory && d.memory.around}}</td>
-            <td>
+            <td class="hidden-xs">
               <span style="cursor: pointer" @click="d.present && identify(d)">
                 <i class="fa fa-location-arrow" :class="{'fa-spin': d.identifying}"></i>
                 {{d.agentVersion}}
@@ -201,7 +201,9 @@
             </td>
             <td>
               <!-- temperature-->
-              {{d.battery && d.battery.temperature/10}}℃
+              <span v-if="d.battery" :class="{'color-red': d.battery.temperature > 400}">
+                {{d.battery.temperature/10}}℃
+              </span>
             </td>
             <td class="hidden-xs">
               {{d.presenceChangedAt | timeSince}}
@@ -214,6 +216,9 @@
               <button class="hidden-xs btn btn-link btn-copy btn-xs" :data-clipboard-text="d.udid">
                 <i class="fa fa-clipboard" alt="Copy to clipboard"></i>
               </button>
+              <a target="_blank" :href='"http://"+d.ip+":7912/screenshot"'>
+                <i class="fa fa-camera" alt="Take screenshot"></i>
+              </a>
             </td>
           </tr>
         </tbody>

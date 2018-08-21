@@ -98,7 +98,10 @@ func newHandler() http.Handler {
 			http.Error(w, err.Error(), 404)
 			return
 		}
-		renderHTML(w, "remote.html", info.IP)
+		renderHTML(w, "remote.html", map[string]interface{}{
+			"IP":   info.IP,
+			"Port": info.Port,
+			"Udid": udid})
 	}).Methods("GET")
 
 	// 设备信息修改
