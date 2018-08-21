@@ -121,7 +121,7 @@
             <th>
               <u>名字</u>
             </th>
-            <th>
+            <th class="hidden-xs">
               <u>Brand</u>
             </th>
             <th class="hidden">Model</th>
@@ -165,7 +165,8 @@
                   <!-- locate idle device-->
                   <i class="fa fa-location-arrow" :class="{'fa-spin': d.identifying}"></i>
                 </span>
-                <span class="color-red" v-if="d.using" @dblclick.alt="releaseDevice(d.udid)">{{d.owner && d.owner.ip}}</span>
+                <span class="hidden-xs color-red" v-if="d.using" @dblclick.alt="releaseDevice(d.udid)">{{d.owner && d.owner.ip}}</span>
+                <span class="visible-xs color-red" v-if="d.using">Busy</span>
               </span>
             </td>
             <td class="hidden-xs">
@@ -180,7 +181,7 @@
               <span v-text="(d.product || {}).name"></span>
               <a :href="'/devices/'+d.udid+'/edit'" class="fa fa-edit"></a>
             </td>
-            <td v-text="d.brand"></td>
+            <td class="hidden-xs" v-text="d.brand"></td>
             <td class="hidden" v-text="d.model"></td>
             <td class="hidden-xs">{{d.version}}({{d.sdk}})</td>
             <td class="hidden">
@@ -197,12 +198,14 @@
               </span>
             </td>
             <td>
-              {{d.battery && d.battery.level}}%
-              <span class="hidden-xs" v-if="d.present && d.battery">
-                <i class="fa fa-usb" v-if="d.provider"></i>
-                <!-- 2: charging -->
-                <i class="fa fa-plug color-rest" v-else-if="d.battery.status == 2"></i>
-                <i class="fa-fix-height fa" v-else :class='"fa-battery-" + Math.floor(d.battery.level/25)'></i>
+              <span v-if="d.battery" :class="{'color-red': d.battery.level < 30}">
+                {{d.battery.level}}%
+                <span class="hidden-xs" v-if="d.present && d.battery">
+                  <i class="fa fa-usb" v-if="d.provider"></i>
+                  <!-- 2: charging -->
+                  <i class="fa fa-plug color-rest" v-else-if="d.battery.status == 2"></i>
+                  <i class="fa-fix-height fa" v-else :class='"fa-battery-" + Math.floor(d.battery.level/25)'></i>
+                </span>
               </span>
             </td>
             <td>
