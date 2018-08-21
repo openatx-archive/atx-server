@@ -108,14 +108,14 @@
           <tr>
             <th class="hidden">#</th>
             <th>@</th>
-            <th class="hidden-xs text-center">:)</th>
+            <th class="text-center">:)</th>
             <th class="hidden-xs">
               <u>IP</u>
             </th>
             <th class="hidden-xs">
               <u>Serial</u>
             </th>
-            <th>
+            <th class="hidden-xs">
               <u>资产编号</u>
             </th>
             <th>
@@ -131,10 +131,12 @@
             <th class="hidden">MAC</th>
             <th class="hidden">Memory</th>
             <th class="hidden-xs">Agent</th>
-            <th class="hidden-xs">电量
+            <th>
+              <span class="hidden-xs">电量</span>
               <i class="fa fa-battery"></i>
             </th>
-            <th>温度
+            <th>
+              <span class="hidden-xs">温度</span>
               <i class="fa fa-thermometer"></i>
             </th>
             <th class="hidden-xs">上线时间</th>
@@ -153,14 +155,18 @@
                 <span v-show="!d.ready" class="fa fa-thumbs-o-down"></span>
               </div>
             </td>
-            <td class="hidden-xs text-center">
+            <td class="text-center">
               <span v-if="!d.present" class="color-yellow">Offline</span>
-              <template v-else>
-                <a v-if="!d.using" target="_blank" class="btn btn-xs btn-link" :href='"/devices/"+d.udid+"/remote"'>
+              <span v-else>
+                <a v-if="!d.using" target="_blank" class="hidden-xs btn btn-xs btn-link" :href='"/devices/"+d.udid+"/remote"'>
                   Use
                 </a>
+                <span v-if="!d.using" class="visible-xs" style="cursor: pointer" @click="d.present && identify(d)">
+                  <!-- locate idle device-->
+                  <i class="fa fa-location-arrow" :class="{'fa-spin': d.identifying}"></i>
+                </span>
                 <span class="color-red" v-if="d.using" @dblclick.alt="releaseDevice(d.udid)">{{d.owner && d.owner.ip}}</span>
-              </template>
+              </span>
             </td>
             <td class="hidden-xs">
               <span v-text="d.ip"></span>
@@ -169,7 +175,7 @@
               {{d.serial | shortString(10)}}
               <!-- <span v-text='d.serial && d.serial.slice(4)+"..."' class="visible-xs"></span> -->
             </td>
-            <td v-text="d.propertyId"></td>
+            <td class="hidden-xs" v-text="d.propertyId"></td>
             <td>
               <span v-text="(d.product || {}).name"></span>
               <a :href="'/devices/'+d.udid+'/edit'" class="fa fa-edit"></a>
@@ -190,14 +196,14 @@
                 {{d.agentVersion}}
               </span>
             </td>
-            <td class="hidden-xs">
+            <td>
               {{d.battery && d.battery.level}}%
-              <template v-if="d.present && d.battery">
-                <i class="hidden-xs fa fa-usb" v-if="d.provider"></i>
+              <span class="hidden-xs" v-if="d.present && d.battery">
+                <i class="fa fa-usb" v-if="d.provider"></i>
                 <!-- 2: charging -->
-                <i class="hidden-xs fa fa-plug color-rest" v-else-if="d.battery.status == 2"></i>
-                <i class="hidden-xs fa-fix-height fa" v-else :class='"fa-battery-" + Math.floor(d.battery.level/25)'></i>
-              </template>
+                <i class="fa fa-plug color-rest" v-else-if="d.battery.status == 2"></i>
+                <i class="fa-fix-height fa" v-else :class='"fa-battery-" + Math.floor(d.battery.level/25)'></i>
+              </span>
             </td>
             <td>
               <!-- temperature-->
