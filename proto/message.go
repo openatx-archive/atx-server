@@ -47,6 +47,7 @@ type DeviceInfo struct {
 	Brand                  string                `json:"brand,omitempty"`      // ro.product.brand
 	Model                  string                `json:"model,omitempty"`      // ro.product.model
 	HWAddr                 string                `json:"hwaddr,omitempty"`     // persist.sys.wifi.mac
+	Notes                  string                `json:"notes,omitempty"`      // device notes
 	IP                     string                `json:"ip,omitempty"`
 	Port                   int                   `json:"port,omitempty"`
 	ReverseProxyAddr       string                `json:"reverseProxyAddr,omitempty"`

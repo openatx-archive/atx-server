@@ -140,6 +140,7 @@
               <i class="fa fa-thermometer"></i>
             </th>
             <th class="hidden-xs">上线时间</th>
+            <th>备注</th>
             <th class="hidden-xs">更多</th>
             <!-- <th class="hidden-xs">Other</th> -->
           </tr>
@@ -217,6 +218,9 @@
             <td class="hidden-xs">
               {{d.presenceChangedAt | timeSince}}
             </td>
+            <td>
+              <editable-span :content="d.notes" @change="changeNotes(d, $event)" />
+            </td>
             <td class="hidden-xs">
               <!-- <a target="_blank" :href='"http://"+d.ip+":7912/remote"'><i class="fa fa-television"></i></a> -->
               <a class="hidden-xs" target="_blank" :href='"http://"+d.ip+":7912/term"'>
@@ -234,6 +238,7 @@
       </table>
     </div>
   </div>
+  <script src='[["/assets/vue-components.js" | urlhash]]'></script>
   <script>
     new Vue({
       el: ".container-fluid",
@@ -400,12 +405,17 @@
         },
         toggleReady: function (d) {
           d.ready = !d.ready;
-          $.ajax({
-            url: "/devices/" + d.udid + "/info",
+          this.updateDeviceInfo(d.udid, { ready: d.ready });
+        },
+        changeNotes: function (d, notes) {
+          d.notes = notes + "..";
+          this.updateDeviceInfo(d.udid, { notes: notes })
+        },
+        updateDeviceInfo: function (udid, info) {
+          return $.ajax({
+            url: "/devices/" + udid + "/info",
             method: "post",
-            data: JSON.stringify({
-              ready: d.ready,
-            })
+            data: JSON.stringify(info),
           })
         },
         batchIdentify: function (theme) {
