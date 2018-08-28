@@ -201,6 +201,14 @@ $ curl -X POST \
 ## Comminication between atx-agent and atx-server
 It is complicated. Hard to write.
 
+# Docker
+`atx-server` is dockerized (based on `golang` image) and depends on the official `rethinkdb` container. To build and run all services, use:
+```bash
+docker-compuse up --build
+```
+`atx-server` can be accessed from `localhost:8000` and `rethinkdb` web console is available at `localhost:8001`, both specified in the compose file.
+`rethinkdb` data is stored at `$PWD/data` (host volume). 
+
 ## References and some good resources
 - Golang library for rethinkdb [gorethink](https://github.com/GoRethink/gorethink)
 - [美团点评云真机平台实践](https://tech.meituan.com/cloud_phone.html)

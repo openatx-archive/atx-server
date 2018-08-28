@@ -1,0 +1,17 @@
+version: '3'
+services:
+  atxserver:
+    build: .
+    container_name: atxserver
+    ports:
+      - "8000:8000"
+    depends_on:
+      - rethinkdb
+    entrypoint: ./atx-server --rdbaddr rethinkdb:28015 --port 8000
+  rethinkdb:
+    image: rethinkdb:2.3.6
+    container_name: rethinkdb
+    ports:
+      - "8001:8080" # expose rethinkdb web console
+    volumes:
+      - "$PWD/data:/data"
