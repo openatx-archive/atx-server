@@ -177,7 +177,7 @@ func (db *RdbUtils) DeviceFindAll(info proto.DeviceInfo) (infos []proto.DeviceIn
 
 // ProviderFindAll get all providers
 func (db *RdbUtils) ProvidersAll() (providers []proto.Provider, err error) {
-	res, err := r.Table("providers").
+	res, err := r.Table("providers").OrderBy(r.Desc("present"), "id").
 		Merge(func(p r.Term) interface{} {
 			return map[string]interface{}{
 				"devices": r.Table("devices").

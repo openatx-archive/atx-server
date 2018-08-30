@@ -35,7 +35,8 @@
       <p>Brand: {{product.brand}}</p>
       <p>
         Model: {{product.model}}
-        <a :href='"https://www.baidu.com/s?wd="+device.model'>百度</a> <a :href='"https://www.google.com.hk/search?q=" + device.model'>Google</a>
+        <a target="_blank" :href='"https://www.baidu.com/s?wd="+device.model'>百度</a>
+        <a target="_blank" :href='"https://www.google.com/search?q=" + device.model'>Google</a>
       </p>
       <p>Name: <input type="text" v-model.trim="product.name"></p>
       <p>CPU: <input type="text" v-model.trim="product.cpu"></p>
