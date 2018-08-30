@@ -21,6 +21,10 @@
         .color-green {
             color: green;
         }
+
+        .cursor {
+            cursor: pointer;
+        }
     </style>
 </head>
 
@@ -49,7 +53,7 @@
                 </li>
                 <li class="active">
                     <a href="/providers">
-                        <i class="fa fa-bandcamp"></i> 树莓派列表
+                        <i class="fa fa-bandcamp"></i> 节点列表
                     </a>
                 </li>
             </ul>
@@ -59,7 +63,7 @@
         <table class="table">
             <thead>
                 <tr>
-                    <th>Present</th>
+                    <th>Present ({{presentCount}})</th>
                     <th>IP</th>
                     <th>Notes</th>
                     <th>Uptime</th>
@@ -73,10 +77,10 @@
                         <i class="fa fa-smile-o color-green" v-if="p.present"></i>
                     </td>
                     <td>{{p.ip}}</td>
-                    <td @click="updateNotes(p)">{{p.notes}} <i class="fa fa-edit"></i></td>
+                    <td @click="updateNotes(p)">{{p.notes}} <i class="cursor fa fa-edit"></i></td>
                     <td>
                         <span v-show="p.present">
-                            {{p.createdAt | timeSince}}
+                            {{p.presenceChangedAt | timeSince}}
                         </span>
                     </td>
                     <td>
@@ -121,6 +125,13 @@
                         console.log(ret)
                         v.notes = newNotes;
                     }.bind(this))
+                }
+            },
+            computed: {
+                presentCount: function () {
+                    return this.providers.filter(function (v) {
+                        return v.present;
+                    }).length;
                 }
             },
             filters: {

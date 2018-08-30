@@ -251,11 +251,12 @@ func (db *RdbUtils) ProductUpdate(id string, product proto.Product) error {
 // ProviderUpdateOrInsert will create a record if not exists
 func (db *RdbUtils) ProviderUpdateOrInsert(machineId string, ip string, port int) error {
 	p := proto.Provider{
-		Id:        machineId,
-		IP:        ip,
-		Port:      port,
-		Present:   newBool(true),
-		CreatedAt: time.Now(),
+		Id:                machineId,
+		IP:                ip,
+		Port:              port,
+		Present:           newBool(true),
+		CreatedAt:         time.Now(),
+		PresenceChangedAt: time.Now(),
 	}
 	_, err := r.Table("providers").Insert(p, r.InsertOpts{
 		Conflict: func(id, oldDoc, newDoc r.Term) interface{} {
