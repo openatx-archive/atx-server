@@ -20,10 +20,6 @@
       <dl>
         <dt>Serial</dt>
         <dd>{{device.serial}}</dd>
-        <dt>Brand</dt>
-        <dd>{{device.brand}}</dd>
-        <dt>Model</dt>
-        <dd>{{device.model}}</dd>
         <dt>CPU</dt>
         <dd>{{device.cpu && device.cpu.hardware}}</dd>
         <dt>Memory</dt>
@@ -37,7 +33,10 @@
       </p>
       <p>ID: {{product.id}}</p>
       <p>Brand: {{product.brand}}</p>
-      <p>Model: {{product.model}}</p>
+      <p>
+        Model: {{product.model}}
+        <a :href='"https://www.baidu.com/s?wd="+device.model'>百度</a> <a :href='"https://www.google.com.hk/search?q=" + device.model'>Google</a>
+      </p>
       <p>Name: <input type="text" v-model.trim="product.name"></p>
       <p>CPU: <input type="text" v-model.trim="product.cpu"></p>
       <p>GPU: <input type="text" v-model.trim="product.gpu"></p>
@@ -64,28 +63,28 @@
         products: [],
         message: '',
       },
-      mounted: function() {
+      mounted: function () {
         this.udid = udid;
         $.ajax({
-            url: "/devices/" + udid + "/info",
-          })
-          .then(function(ret) {
+          url: "/devices/" + udid + "/info",
+        })
+          .then(function (ret) {
             console.log(ret)
             this.device = ret;
             this.product = ret.product || {};
             this.product_id = this.product.id;
             return ret;
           }.bind(this))
-          .then(function(ret) {
+          .then(function (ret) {
             return $.ajax({
               url: "/products/" + ret.brand + "/" + ret.model
             })
           })
-          .then(function(ret) {
+          .then(function (ret) {
             console.log("products:", ret)
             this.products = ret;
           }.bind(this))
-          .then(function(ret) {
+          .then(function (ret) {
             if (!this.product_id && this.products.length == 1) {
               this.product = this.products[0];
               this.product_id = this.product.id;
@@ -98,27 +97,27 @@
         console.log(udid)
       },
       methods: {
-        updateAndBack: function() {
-          this.update().then(function(ret) {
+        updateAndBack: function () {
+          this.update().then(function (ret) {
             window.location = "/";
           })
         },
-        update: function() {
+        update: function () {
           console.log("update")
           this.message = "updating"
           return $.ajax({
-              url: "/devices/" + udid + "/product",
-              method: "put",
-              data: JSON.stringify(this.product),
-            })
-            .then(function(ret) {
+            url: "/devices/" + udid + "/product",
+            method: "put",
+            data: JSON.stringify(this.product),
+          })
+            .then(function (ret) {
               console.log(ret)
               this.message = "Update success !!"
             }.bind(this))
         },
-        productChange: function(product_id) {
+        productChange: function (product_id) {
           console.log(product_id)
-          this.product = this.products.filter(function(p) {
+          this.product = this.products.filter(function (p) {
             return p.id == product_id
           })[0]
         }

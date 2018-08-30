@@ -46,6 +46,14 @@ func initDB(address, dbName string) {
 		"using":       false,
 		"provider_id": 0,
 	}).Exec(session)
+
+	if err := r.Table("devices").IndexCreate("provider_id", r.IndexCreateOpts{}).Exec(session); err != nil {
+		log.Println("create index", err)
+	}
+
+	r.Table("providers").Update(proto.Provider{
+		Present: newBool(false),
+	}).Exec(session)
 }
 
 type RdbUtils struct {
@@ -164,6 +172,24 @@ func (db *RdbUtils) DeviceFindAll(info proto.DeviceInfo) (infos []proto.DeviceIn
 	if err := res.All(&infos); err != nil {
 		log.Error(err)
 	}
+	return
+}
+
+// ProviderFindAll get all providers
+func (db *RdbUtils) ProvidersAll() (providers []proto.Provider, err error) {
+	res, err := r.Table("providers").
+		Merge(func(p r.Term) interface{} {
+			return map[string]interface{}{
+				"devices": r.Table("devices").
+					GetAllByIndex("provider_id", p.Field("id")).
+					Without("product_id", "provider_id", "battery").CoerceTo("array"),
+			}
+		}).Run(db.session)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+	err = res.All(&providers)
 	return
 }
 

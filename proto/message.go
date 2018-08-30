@@ -95,11 +95,13 @@ type Product struct {
 
 // u2init
 type Provider struct {
-	Id        string    `json:"id" gorethink:"id,omitempty"` // machine id
-	IP        string    `json:"ip" gorethink:"ip,omitempty"`
-	Port      int       `json:"port" gorethink:"port,omitempty"`
-	Present   *bool     `json:"present,omitempty"`
-	CreatedAt time.Time `json:"-" gorethink:"createdAt,omitempty"`
+	Id        string       `json:"id" gorethink:"id,omitempty"` // machine id
+	IP        string       `json:"ip" gorethink:"ip,omitempty"`
+	Port      int          `json:"port" gorethink:"port,omitempty"`
+	Present   *bool        `json:"present,omitempty"`
+	Notes     string       `json:"notes" gorethink:"notes,omitempty"`
+	Devices   []DeviceInfo `json:"devices" gorethink:"devices,omitempty"`
+	CreatedAt time.Time    `json:"createdAt" gorethink:"createdAt,omitempty"`
 }
 
 // Addr combined with ip:port

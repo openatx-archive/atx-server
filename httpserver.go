@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -203,6 +204,40 @@ func newHandler() http.Handler {
 		}
 		log.Debug("ws write closed")
 	})
+
+	r.HandleFunc("/providers", func(w http.ResponseWriter, r *http.Request) {
+		values := r.URL.Query()
+		if _, ok := values["json"]; ok {
+			providers, err := db.ProvidersAll()
+			if err != nil {
+				renderJSON(w, map[string]interface{}{
+					"success":     false,
+					"description": err.Error(),
+				})
+				return
+			}
+			renderJSON(w, providers)
+			return
+		}
+		renderHTML(w, "providers.html", nil)
+	})
+
+	r.HandleFunc("/providers/{id}", func(w http.ResponseWriter, r *http.Request) {
+		var p proto.Provider
+		data, _ := ioutil.ReadAll(r.Body)
+		if err := json.Unmarshal(data, &p); err != nil {
+			renderJSON(w, map[string]interface{}{
+				"success":     false,
+				"description": err.Error(),
+			})
+			return
+		}
+		id := mux.Vars(r)["id"]
+		db.ProviderUpdate(id, p)
+		renderJSON(w, map[string]interface{}{
+			"success": true,
+		})
+	}).Methods("PUT")
 
 	r.HandleFunc("/api/v1/batch/unlock", func(w http.ResponseWriter, r *http.Request) {
 		batchRunCommand("am start -W --user 0 -a com.github.uiautomator.ACTION_IDENTIFY; input keyevent HOME")

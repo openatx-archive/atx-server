@@ -40,8 +40,13 @@
       <p class="navbar-text"></p>
       <ul class="nav navbar-nav">
         <li class="active">
-          <a href="/">设备列表
-            <span class="sr-only"></span>
+          <a href="/">
+            <i class="fa fa-list-alt"></i> 设备列表
+          </a>
+        </li>
+        <li>
+          <a href="/providers">
+            <i class="fa fa-bandcamp"></i> 树莓派列表
           </a>
         </li>
         <li>
@@ -231,6 +236,9 @@
               </button>
               <a target="_blank" :href='"http://"+d.ip+":7912/screenshot"'>
                 <i class="fa fa-camera" alt="Take screenshot"></i>
+              </a>
+              <a class="hidden-xs btn btn-link btn-copy btn-xs" target="_blank" :href='"http://"+d.ip+":7912/remote"'>
+                <i class="fa fa-eye" alt="Remote control"></i>
               </a>
             </td>
           </tr>
