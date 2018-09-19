@@ -76,7 +76,7 @@ func echo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	devInfo.IP = host
-	log.Debugf("client ip:%s product:%s brand:%s", devInfo.IP, devInfo.Model, devInfo.Brand)
+	log.Debugf("client ip:%s port:%d product:%s brand:%s", devInfo.IP,devInfo.Port, devInfo.Model, devInfo.Brand)
 
 	if devInfo.Memory != nil {
 		around := int(math.Ceil(float64(devInfo.Memory.Total-512*1024) / 1024.0 / 1024.0)) // around
@@ -124,8 +124,9 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func runAndroidShell(ip string, command string) (output string, err error) {
-	u, _ := url.Parse("http://" + ip + ":7912/shell")
+func runAndroidShell(ip string,port int, command string) (output string, err error) {
+	str := fmt.Sprintf("http://%s:%d/shell",ip,port)
+	u, _ := url.Parse(str)
 	params := url.Values{}
 	params.Add("command", command)
 	u.RawQuery = params.Encode()
@@ -148,10 +149,10 @@ func batchRunCommand(command string) {
 		}
 
 		wg.Add(1)
-		go func(ip string) {
-			runAndroidShell(ip, command)
+		go func(ip string,port int) {
+			runAndroidShell(ip,port, command)
 			wg.Done()
-		}(devInfo.IP)
+		}(devInfo.IP,devInfo.Port)
 	}
 	wg.Wait()
 }

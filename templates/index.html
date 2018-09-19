@@ -228,16 +228,16 @@
             </td>
             <td class="hidden-xs">
               <!-- <a target="_blank" :href='"http://"+d.ip+":7912/remote"'><i class="fa fa-television"></i></a> -->
-              <a class="hidden-xs" target="_blank" :href='"http://"+d.ip+":7912/term"'>
+              <a class="hidden-xs" target="_blank" :href='"http://"+d.ip+":"+d.port+"/term"'>
                 <i class="fa fa-terminal"></i>
               </a>
               <button class="hidden-xs btn btn-link btn-copy btn-xs" :data-clipboard-text="d.udid">
                 <i class="fa fa-clipboard" alt="Copy to clipboard"></i>
               </button>
-              <a target="_blank" :href='"http://"+d.ip+":7912/screenshot"'>
+              <a target="_blank" :href='"http://"+d.ip+":"+d.port+"/screenshot"'>
                 <i class="fa fa-camera" alt="Take screenshot"></i>
               </a>
-              <a class="hidden-xs btn btn-link btn-copy btn-xs" target="_blank" :href='"http://"+d.ip+":7912/remote"'>
+              <a class="hidden-xs btn btn-link btn-copy btn-xs" target="_blank" :href='"http://"+d.ip+":"+d.port+"/remote"'>
                 <i class="fa fa-eye" alt="Remote control"></i>
               </a>
             </td>

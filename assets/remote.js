@@ -27,7 +27,7 @@ window.app = new Vue({
     deviceUdid: deviceUdid,
     device: {
       ip: deviceIp,
-      port: 7912,
+      port: devicePort,
     },
     deviceInfo: {},
     fixConsole: '', // log for fix minicap and rotation

@@ -435,7 +435,7 @@ func newHandler() http.Handler {
 		}
 
 		command := r.FormValue("command")
-		output, err := runAndroidShell(info.IP, command)
+		output, err := runAndroidShell(info.IP,info.Port, command)
 		if err != nil {
 			renderJSON(w, map[string]string{
 				"error": err.Error(),
