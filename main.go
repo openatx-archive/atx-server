@@ -22,6 +22,8 @@ import (
 const (
 	version                = "dev"
 	defaultATXAgentVersion = "0.4.3"
+	defaultUIautomatorVersion = "1.1.5"
+	defaultRecorderVersion = "1.0"
 )
 
 var (
@@ -31,6 +33,8 @@ var (
 	rdbName         = kingpin.Flag("rdbname", "rethinkdb database name").Default("atxserver").String()
 	videoBackend    = kingpin.Flag("video-backend", "backend service for encoding images to video").Default("http://localhost:7000").String()
 	atxAgentVersion string
+	uiautomator2Version string
+	recorderVersion string
 	dingtalkToken   string
 )
 
@@ -159,6 +163,8 @@ func batchRunCommand(command string) {
 func main() {
 	// Refs: atx-agent version https://github.com/openatx/atx-agent/releases
 	kingpin.Flag("agent", "atx-agent version").Default(defaultATXAgentVersion).StringVar(&atxAgentVersion)
+	kingpin.Flag("uiautomator2", "uiautomator2 version").Default(defaultUIautomatorVersion).StringVar(&uiautomator2Version)
+	kingpin.Flag("recorder", "recorder version").Default(defaultRecorderVersion).StringVar(&recorderVersion)
 	// FIXME(ssx): Ding talk is disabled because of too many boring messages
 	kingpin.Flag("ding-token", "DingDing robot token (env: DING_TOKEN)").OverrideDefaultFromEnvar("DING_TOKEN").StringVar(&dingtalkToken)
 	kingpin.Version(version)

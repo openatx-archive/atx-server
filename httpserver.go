@@ -83,7 +83,21 @@ func newHandler() http.Handler {
 		renderJSON(w, map[string]string{
 			"server":    version,
 			"atx-agent": atxAgentVersion,
+			"uiautomator2": uiautomator2Version,
+			"recorder": recorderVersion,
 		})
+	})
+	r.HandleFunc("/setversion", func(w http.ResponseWriter, r *http.Request) {
+		//renderJSON(w, map[string]string{
+		//	"server":    version,
+		//	"atx-agent": atxAgentVersion,
+		//	"uiautomator2": uiautomator2Version,
+		//	"recorder": recorderVersion,
+		//})
+		renderHTML(w, "setversion.html", map[string]interface{}{
+			"atx":   atxAgentVersion,
+			"uiautomator2": uiautomator2Version,
+			"recorder": recorderVersion})
 	})
 
 	// 设备远程控制
