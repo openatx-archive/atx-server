@@ -80,11 +80,55 @@ func renderJSON(w http.ResponseWriter, data interface{}) {
 func newHandler() http.Handler {
 	r := mux.NewRouter()
 	r.HandleFunc("/version", func(w http.ResponseWriter, r *http.Request) {
+		atxagent, err := db.VersionGet("atxagent")
+		uiautomator2, err := db.VersionGet("uiautomator2")
+		recorder, err := db.VersionGet("recorder")
+		if err != nil {
+			log.Println("Unexpect err:", err)
+		}
 		renderJSON(w, map[string]string{
 			"server":    version,
-			"atx-agent": atxAgentVersion,
+			"atx-agent": atxagent.VersionNumber,
+			"uiautomator2": uiautomator2.VersionNumber,
+			"recorder": recorder.VersionNumber,
 		})
 	})
+
+	r.HandleFunc("/setversion", func(w http.ResponseWriter, r *http.Request) {
+		//renderJSON(w, map[string]string{
+		//	"server":    version,
+		//	"atx-agent": atxAgentVersion,
+		//	"uiautomator2": uiautomator2Version,
+		//	"recorder": recorderVersion,
+		//})
+		atxagent, err := db.VersionGet("atxagent")
+		uiautomator2, err := db.VersionGet("uiautomator2")
+		recorder, err := db.VersionGet("recorder")
+		if err != nil {
+			log.Println("Unexpect err:", err)
+		}
+		renderHTML(w, "setversion.html", map[string]interface{}{
+			"atx":   &atxagent.VersionNumber,
+			"uiautomator2": &uiautomator2.VersionNumber,
+			"recorder": &recorder.VersionNumber})
+	})
+
+	r.HandleFunc("/version/{apkType}", func(w http.ResponseWriter, r *http.Request) {
+		var v proto.Version
+		data, _ := ioutil.ReadAll(r.Body)
+		if err := json.Unmarshal(data, &v); err != nil {
+			renderJSON(w, map[string]interface{}{
+				"success":     false,
+				"description": err.Error(),
+			})
+			return
+		}
+		apkType := mux.Vars(r)["apkType"]
+		db.VersionUpdate(apkType, v)
+		renderJSON(w, map[string]interface{}{
+			"success": true,
+		})
+	}).Methods("PUT")
 
 	// 设备远程控制
 	r.HandleFunc("/devices/ip:{ip}/remote", func(w http.ResponseWriter, r *http.Request) {

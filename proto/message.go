@@ -105,6 +105,11 @@ type Provider struct {
 	PresenceChangedAt time.Time    `json:"presenceChangedAt,omitempty"`
 }
 
+type Version struct {
+	ApkType                		 string       `json:"apkType" gorethink:"apkType,omitempty"`
+	VersionNumber                string       `json:"versionNumber" gorethink:"versionNumber,omitempty"`
+}
+
 // Addr combined with ip:port
 func (p *Provider) Addr() string {
 	return fmt.Sprintf("%s:%d", p.IP, p.Port)

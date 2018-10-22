@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"time"
 
@@ -40,6 +41,12 @@ func initDB(address, dbName string) {
 	})
 	db.TableMustCreate("products")
 	db.TableMustCreate("providers")
+	db.TableMustCreate("versions", r.TableCreateOpts{
+		PrimaryKey: "apkType",
+	})
+	db.InitVersions("atxagent", defaultATXAgentVersion)
+	db.InitVersions("uiautomator2", defaultUIautomatorVersion)
+	db.InitVersions("recorder", defaultRecorderVersion)
 
 	r.Table("devices").Update(map[string]interface{}{
 		"present":     false,
@@ -294,5 +301,33 @@ func (db *RdbUtils) ProviderGet(id string) (provider proto.Provider, err error) 
 	}
 	defer res.Close()
 	err = res.One(&provider)
+	return
+}
+
+func (db *RdbUtils) InitVersions(apkType string, versionNumber string) error {
+	v := proto.Version{
+		ApkType: apkType,
+		VersionNumber: versionNumber,
+	}
+	_, err := r.Table("versions").Insert(v, r.InsertOpts{
+		Conflict: "error",
+	}).RunWrite(db.session)
+	return err
+}
+
+func (db *RdbUtils) VersionUpdate(apkType string, version proto.Version) error {
+	version.ApkType = apkType
+	fmt.Println(version)
+	_, err := r.Table("versions").Get(apkType).Update(version).RunWrite(db.session)
+	return err
+}
+
+func (db *RdbUtils) VersionGet(apkType string) (version proto.Version, err error) {
+	res, err := r.Table("versions").Get(apkType).Run(db.session)
+	if err != nil {
+		return
+	}
+	defer res.Close()
+	err = res.One(&version)
 	return
 }
