@@ -1,5 +1,5 @@
-FROM golang:1.10
-RUN go get -v github.com/openatx/atx-server && cd $GOPATH/src/github.com/openatx/atx-server && go build
+FROM golang:1.11
+RUN go build
 
 FROM debian:stretch
 WORKDIR /root/
