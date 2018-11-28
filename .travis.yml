@@ -1,6 +1,8 @@
 ---
 language: go
 sudo: false
+services:
+  - docker
 go:
   - "1.11"
 env:
@@ -10,5 +12,7 @@ install: true
 
 script:
   - go test -v
+  - docker build .
+
 after_success:
   - test -n "$TRAVIS_TAG" && curl -sL https://git.io/goreleaser | bash
