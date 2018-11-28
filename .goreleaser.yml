@@ -1,0 +1,12 @@
+builds:
+  -
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - 386
+    flags: -tags vfs
+    hooks:
+      pre: go generate
