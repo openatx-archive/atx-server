@@ -1,3 +1,8 @@
+# Deprecated
+Please use <https://github.com/openatx/atxserver2> instead.
+
+-----------------
+
 # ATX-SERVER
 [![GitHub stars](https://img.shields.io/badge/govendor-vendor-blue.svg)](https://github.com/kardianos/govendor)
 [![Build Status](https://travis-ci.org/openatx/atx-server.svg?branch=master)](https://travis-ci.org/openatx/atx-server)
